@@ -5,7 +5,7 @@ Foto-Upload-Webseite für unsere Hochzeit am 26. Juni 2026.
 ## Installation (1 Befehl)
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/USER/wedding-photos/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/88frank88/wedding-photos/main/install.sh | bash
 ```
 
 ### Voraussetzungen
@@ -54,7 +54,7 @@ cp -r /opt/wedding-photos/backend/uploads/ /mnt/backup/
 ## Manuelle Installation (ohne install.sh)
 
 ```bash
-git clone https://github.com/USER/wedding-photos.git /opt/wedding-photos
+git clone https://github.com/88frank88/wedding-photos.git /opt/wedding-photos
 cd /opt/wedding-photos/backend
 npm install --production
 cp ../.env.example ../.env

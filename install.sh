@@ -2,7 +2,7 @@
 set -euo pipefail
 
 INSTALL_DIR="/opt/wedding-photos"
-REPO_URL="${REPO_URL:-https://github.com/USER/wedding-photos.git}"
+REPO_URL="${REPO_URL:-https://github.com/88frank88/wedding-photos.git}"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
