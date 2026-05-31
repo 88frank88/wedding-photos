@@ -1,0 +1,18 @@
+[Unit]
+Description=Wedding Photos Upload Server
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/wedding-photos/backend
+ExecStart=/usr/bin/node server.js
+Restart=always
+RestartSec=10
+EnvironmentFile=/opt/wedding-photos/.env
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

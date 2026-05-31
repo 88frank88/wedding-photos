@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Irina & Alexander — 26. Juni 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Pinyon+Script&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+
+:root{
+  --rosa:#d4a0a0;
+  --rosa-light:#f0d4d4;
+  --rosa-dark:#b07878;
+  --rosa-bg:#fdf6f6;
+  --cream:#fef9f5;
+  --gold:#c9a96e;
+  --gold-light:#e8d5a8;
+  --text:#4a3a3a;
+  --text-light:#7a6a6a;
+  --white:#ffffff;
+  --shadow:0 4px 24px rgba(180,120,120,0.12);
+}
+
+body{
+  font-family:'Cormorant Garamond',Georgia,serif;
+  background:var(--cream);
+  color:var(--text);
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+.hero{
+  position:relative;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:40px 20px;
+  background:
+    radial-gradient(ellipse at 20% 50%, rgba(212,160,160,0.15) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 50%, rgba(212,160,160,0.12) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 0%, rgba(201,169,110,0.08) 0%, transparent 40%),
+    var(--cream);
+}
+
+.hero::before{
+  content:'';
+  position:absolute;
+  top:0;left:0;right:0;bottom:0;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cpath d='M100 20c-15 0-25 20-25 20s-20-5-30 10c-8 12 0 25 0 25s-15 10-10 25c5 15 20 15 20 15s-5 20 10 30c12 8 25 0 25 0s10 15 25 10c15-5 15-20 15-20s20 5 30-10c8-12 0-25 0-25s15-10 10-25c-5-15-20-15-20-15s5-20-10-30c-12-8-25 0-25 0s-10-15-25-10z' fill='none' stroke='rgba(212,160,160,0.06)' stroke-width='0.5'/%3E%3C/svg%3E");
+  background-size:300px;
+  opacity:0.6;
+  pointer-events:none;
+}
+
+.hero-date{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(14px,2vw,18px);
+  letter-spacing:6px;
+  text-transform:uppercase;
+  color:var(--gold);
+  margin-bottom:24px;
+  font-weight:400;
+}
+
+.hero h1{
+  font-family:'Pinyon Script',cursive;
+  font-size:clamp(48px,10vw,96px);
+  color:var(--rosa-dark);
+  line-height:1.1;
+  margin-bottom:8px;
+  position:relative;
+  z-index:1;
+}
+
+.hero-ampersand{
+  display:block;
+  font-family:'Pinyon Script',cursive;
+  font-size:clamp(28px,5vw,48px);
+  color:var(--gold);
+  margin:-8px 0;
+  position:relative;
+  z-index:1;
+}
+
+.hero-subtitle{
+  font-size:clamp(16px,2.5vw,22px);
+  color:var(--text-light);
+  font-weight:300;
+  font-style:italic;
+  margin-top:20px;
+  letter-spacing:1px;
+}
+
+.scroll-hint{
+  position:absolute;
+  bottom:30px;
+  left:50%;
+  transform:translateX(-50%);
+  animation:bounce 2s infinite;
+  color:var(--rosa);
+  font-size:24px;
+  cursor:pointer;
+  text-decoration:none;
+  z-index:1;
+}
+
+@keyframes bounce{
+  0%,20%,50%,80%,100%{transform:translateX(-50%) translateY(0)}
+  40%{transform:translateX(-50%) translateY(-10px)}
+  60%{transform:translateX(-50%) translateY(-5px)}
+}
+
+.section{
+  max-width:900px;
+  margin:0 auto;
+  padding:60px 20px;
+}
+
+.section-title{
+  font-family:'Pinyon Script',cursive;
+  font-size:clamp(32px,6vw,52px);
+  color:var(--rosa-dark);
+  text-align:center;
+  margin-bottom:12px;
+}
+
+.section-subtitle{
+  text-align:center;
+  color:var(--text-light);
+  font-size:clamp(14px,2vw,18px);
+  font-style:italic;
+  margin-bottom:40px;
+  font-weight:300;
+}
+
+.upload-area{
+  background:var(--white);
+  border:2px dashed var(--rosa-light);
+  border-radius:20px;
+  padding:40px 30px;
+  text-align:center;
+  cursor:pointer;
+  transition:all 0.3s ease;
+  position:relative;
+}
+
+.upload-area:hover,.upload-area.dragover{
+  border-color:var(--rosa);
+  background:var(--rosa-bg);
+  transform:translateY(-2px);
+  box-shadow:var(--shadow);
+}
+
+.upload-icon{
+  font-size:48px;
+  color:var(--rosa);
+  margin-bottom:16px;
+}
+
+.upload-text{
+  font-size:18px;
+  color:var(--text);
+  margin-bottom:8px;
+}
+
+.upload-hint{
+  font-size:14px;
+  color:var(--text-light);
+}
+
+.name-input-wrap{
+  margin-top:20px;
+  text-align:center;
+}
+
+.name-input-wrap label{
+  display:block;
+  font-size:14px;
+  color:var(--text-light);
+  margin-bottom:8px;
+  font-style:italic;
+}
+
+.name-input{
+  width:100%;
+  max-width:320px;
+  padding:12px 20px;
+  border:1px solid var(--rosa-light);
+  border-radius:30px;
+  font-family:'Cormorant Garamond',serif;
+  font-size:16px;
+  color:var(--text);
+  text-align:center;
+  outline:none;
+  transition:border-color 0.3s;
+}
+
+.name-input:focus{
+  border-color:var(--rosa);
+}
+
+.upload-btn{
+  display:inline-block;
+  margin-top:24px;
+  padding:14px 40px;
+  background:linear-gradient(135deg,var(--rosa) 0%,var(--rosa-dark) 100%);
+  color:var(--white);
+  border:none;
+  border-radius:30px;
+  font-family:'Cormorant Garamond',serif;
+  font-size:18px;
+  cursor:pointer;
+  transition:all 0.3s;
+  letter-spacing:1px;
+}
+
+.upload-btn:hover{
+  transform:translateY(-2px);
+  box-shadow:0 6px 20px rgba(180,120,120,0.3);
+}
+
+.upload-btn:disabled{
+  opacity:0.6;
+  cursor:not-allowed;
+  transform:none;
+}
+
+.progress-wrap{
+  margin-top:24px;
+  display:none;
+}
+
+.progress-wrap.active{
+  display:block;
+}
+
+.progress-bar-bg{
+  width:100%;
+  height:8px;
+  background:var(--rosa-light);
+  border-radius:4px;
+  overflow:hidden;
+  margin-bottom:8px;
+}
+
+.progress-bar-fill{
+  height:100%;
+  background:linear-gradient(90deg,var(--rosa),var(--rosa-dark));
+  border-radius:4px;
+  width:0%;
+  transition:width 0.3s;
+}
+
+.progress-text{
+  font-size:14px;
+  color:var(--text-light);
+  text-align:center;
+}
+
+.file-preview{
+  margin-top:20px;
+  display:none;
+}
+
+.file-preview.active{
+  display:block;
+}
+
+.file-preview-grid{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  justify-content:center;
+}
+
+.file-preview-item{
+  position:relative;
+  width:80px;
+  height:80px;
+  border-radius:10px;
+  overflow:hidden;
+  box-shadow:0 2px 8px rgba(0,0,0,0.1);
+}
+
+.file-preview-item img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+.file-preview-item .remove-btn{
+  position:absolute;
+  top:2px;right:2px;
+  width:22px;height:22px;
+  background:rgba(0,0,0,0.5);
+  color:#fff;
+  border:none;
+  border-radius:50%;
+  font-size:14px;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  line-height:1;
+}
+
+.success-msg{
+  display:none;
+  text-align:center;
+  padding:20px;
+  background:var(--rosa-bg);
+  border-radius:12px;
+  margin-top:20px;
+}
+
+.success-msg.active{
+  display:block;
+}
+
+.success-msg .icon{
+  font-size:36px;
+  margin-bottom:8px;
+}
+
+.success-msg p{
+  color:var(--rosa-dark);
+  font-size:16px;
+}
+
+.error-msg{
+  display:none;
+  text-align:center;
+  padding:16px;
+  background:#fff0f0;
+  border-radius:12px;
+  margin-top:20px;
+  color:#c0392b;
+  font-size:15px;
+}
+
+.error-msg.active{
+  display:block;
+}
+
+.divider{
+  text-align:center;
+  margin:60px auto;
+  position:relative;
+}
+
+.divider::before{
+  content:'';
+  position:absolute;
+  top:50%;
+  left:10%;
+  right:10%;
+  height:1px;
+  background:linear-gradient(90deg,transparent,var(--rosa-light),transparent);
+}
+
+.divider span{
+  display:inline-block;
+  position:relative;
+  background:var(--cream);
+  padding:0 20px;
+  font-family:'Pinyon Script',cursive;
+  font-size:28px;
+  color:var(--rosa);
+}
+
+.gallery{
+  columns:3;
+  column-gap:16px;
+}
+
+@media(max-width:768px){
+  .gallery{columns:2;column-gap:10px}
+}
+
+@media(max-width:480px){
+  .gallery{columns:1}
+}
+
+.gallery-item{
+  break-inside:avoid;
+  margin-bottom:16px;
+  border-radius:12px;
+  overflow:hidden;
+  box-shadow:0 2px 12px rgba(180,120,120,0.1);
+  transition:transform 0.3s,box-shadow 0.3s;
+  cursor:pointer;
+}
+
+.gallery-item:hover{
+  transform:translateY(-4px);
+  box-shadow:0 8px 28px rgba(180,120,120,0.2);
+}
+
+.gallery-item img{
+  width:100%;
+  display:block;
+}
+
+.gallery-empty{
+  text-align:center;
+  padding:60px 20px;
+  color:var(--text-light);
+  font-style:italic;
+  font-size:18px;
+}
+
+.gallery-loading{
+  text-align:center;
+  padding:40px;
+  color:var(--rosa);
+}
+
+.lightbox{
+  display:none;
+  position:fixed;
+  top:0;left:0;right:0;bottom:0;
+  background:rgba(0,0,0,0.9);
+  z-index:1000;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+}
+
+.lightbox.active{
+  display:flex;
+}
+
+.lightbox img{
+  max-width:90%;
+  max-height:90%;
+  object-fit:contain;
+  border-radius:8px;
+}
+
+.lightbox-close{
+  position:absolute;
+  top:20px;right:30px;
+  color:#fff;
+  font-size:36px;
+  cursor:pointer;
+  z-index:1001;
+  text-decoration:none;
+  font-family:sans-serif;
+}
+
+footer{
+  text-align:center;
+  padding:40px 20px;
+  color:var(--text-light);
+  font-size:14px;
+  font-style:italic;
+}
+
+footer .heart{
+  color:var(--rosa);
+}
+
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+
+<section class="hero">
+  <p class="hero-date">26. Juni 2026</p>
+  <h1>Irina</h1>
+  <span class="hero-ampersand">&amp;</span>
+  <h1>Alexander</h1>
+  <p class="hero-subtitle">Teilt eure sch&ouml;nsten Momente mit uns</p>
+  <a href="#upload" class="scroll-hint" aria-label="Scroll down">&#8595;</a>
+</section>
+
+<section class="section" id="upload">
+  <h2 class="section-title">Fotos hochladen</h2>
+  <p class="section-subtitle">Teilt eure liebsten Fotos von unserem besonderen Tag</p>
+
+  <div class="upload-area" id="dropZone">
+    <div class="upload-icon">&#128247;</div>
+    <p class="upload-text">Fotos hierher ziehen oder klicken zum Ausw&auml;hlen</p>
+    <p class="upload-hint">JPG, PNG, HEIC oder WebP &bull; max. 20 MB pro Foto &bull; max. 20 Fotos</p>
+    <input type="file" id="fileInput" multiple accept=".jpg,.jpeg,.png,.heic,.webp" style="display:none">
+  </div>
+
+  <div class="name-input-wrap">
+    <label for="uploaderName">Dein Name (optional)</label>
+    <input type="text" id="uploaderName" class="name-input" placeholder="z.B. Onkel Hans">
+  </div>
+
+  <div class="file-preview" id="filePreview">
+    <div class="file-preview-grid" id="previewGrid"></div>
+  </div>
+
+  <button class="upload-btn" id="uploadBtn" disabled>Hochladen</button>
+
+  <div class="progress-wrap" id="progressWrap">
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill" id="progressBar"></div>
+    </div>
+    <p class="progress-text" id="progressText">0%</p>
+  </div>
+
+  <div class="success-msg" id="successMsg">
+    <div class="icon">&#10084;</div>
+    <p id="successText">Vielen Dank! Eure Fotos wurden hochgeladen.</p>
+  </div>
+
+  <div class="error-msg" id="errorMsg"></div>
+</section>
+
+<div class="divider"><span>Galerie</span></div>
+
+<section class="section" id="gallery">
+  <h2 class="section-title">Eure Erinnerungen</h2>
+  <p class="section-subtitle">Alle hochgeladenen Fotos auf einen Blick</p>
+  <div class="gallery-loading" id="galleryLoading">Fotos werden geladen...</div>
+  <div class="gallery" id="galleryGrid"></div>
+  <div class="gallery-empty hidden" id="galleryEmpty">Noch keine Fotos vorhanden &mdash; seid die Ersten!</div>
+</section>
+
+<div class="lightbox" id="lightbox">
+  <span class="lightbox-close" id="lightboxClose">&times;</span>
+  <img id="lightboxImg" src="" alt="">
+</div>
+
+<footer>
+  <p>Mit <span class="heart">&hearts;</span> f&uuml;r Irina &amp; Alexander</p>
+</footer>
+
+<script>
+(function(){
+  const dropZone=document.getElementById('dropZone');
+  const fileInput=document.getElementById('fileInput');
+  const uploadBtn=document.getElementById('uploadBtn');
+  const progressWrap=document.getElementById('progressWrap');
+  const progressBar=document.getElementById('progressBar');
+  const progressText=document.getElementById('progressText');
+  const successMsg=document.getElementById('successMsg');
+  const successText=document.getElementById('successText');
+  const errorMsg=document.getElementById('errorMsg');
+  const filePreview=document.getElementById('filePreview');
+  const previewGrid=document.getElementById('previewGrid');
+  const uploaderName=document.getElementById('uploaderName');
+  const galleryGrid=document.getElementById('galleryGrid');
+  const galleryLoading=document.getElementById('galleryLoading');
+  const galleryEmpty=document.getElementById('galleryEmpty');
+  const lightbox=document.getElementById('lightbox');
+  const lightboxImg=document.getElementById('lightboxImg');
+  const lightboxClose=document.getElementById('lightboxClose');
+
+  let selectedFiles=[];
+
+  dropZone.addEventListener('click',()=>fileInput.click());
+
+  dropZone.addEventListener('dragover',e=>{
+    e.preventDefault();
+    dropZone.classList.add('dragover');
+  });
+
+  dropZone.addEventListener('dragleave',()=>{
+    dropZone.classList.remove('dragover');
+  });
+
+  dropZone.addEventListener('drop',e=>{
+    e.preventDefault();
+    dropZone.classList.remove('dragover');
+    handleFiles(e.dataTransfer.files);
+  });
+
+  fileInput.addEventListener('change',()=>{
+    handleFiles(fileInput.files);
+    fileInput.value='';
+  });
+
+  function handleFiles(files){
+    const allowed=['image/jpeg','image/jpg','image/png','image/heic','image/webp'];
+    const allowedExt=['.jpg','.jpeg','.png','.heic','.webp'];
+    const maxSize=20*1024*1024;
+
+    for(let i=0;i<files.length;i++){
+      const f=files[i];
+      const ext='.'+f.name.split('.').pop().toLowerCase();
+      if(!allowed.includes(f.type)&&!allowedExt.includes(ext)){
+        showError(`"${f.name}" ist kein unterstuetztes Format. Erlaubt: JPG, PNG, HEIC, WebP`);
+        continue;
+      }
+      if(f.size>maxSize){
+        showError(`"${f.name}" ist zu gross. Max. 20 MB pro Foto.`);
+        continue;
+      }
+      if(selectedFiles.length>=20){
+        showError('Maximal 20 Fotos pro Upload.');
+        break;
+      }
+      selectedFiles.push(f);
+    }
+    updatePreview();
+    uploadBtn.disabled=selectedFiles.length===0;
+  }
+
+  function updatePreview(){
+    previewGrid.innerHTML='';
+    if(selectedFiles.length===0){
+      filePreview.classList.remove('active');
+      return;
+    }
+    filePreview.classList.add('active');
+    selectedFiles.forEach((f,i)=>{
+      const div=document.createElement('div');
+      div.className='file-preview-item';
+      const img=document.createElement('img');
+      img.src=URL.createObjectURL(f);
+      const btn=document.createElement('button');
+      btn.className='remove-btn';
+      btn.textContent='\u00d7';
+      btn.addEventListener('click',e=>{
+        e.stopPropagation();
+        selectedFiles.splice(i,1);
+        updatePreview();
+        uploadBtn.disabled=selectedFiles.length===0;
+      });
+      div.appendChild(img);
+      div.appendChild(btn);
+      previewGrid.appendChild(div);
+    });
+  }
+
+  uploadBtn.addEventListener('click',uploadFiles);
+
+  function uploadFiles(){
+    if(selectedFiles.length===0)return;
+    uploadBtn.disabled=true;
+    errorMsg.classList.remove('active');
+    successMsg.classList.remove('active');
+    progressWrap.classList.add('active');
+
+    const formData=new FormData();
+    selectedFiles.forEach(f=>formData.append('files[]',f));
+    formData.append('uploaderName',uploaderName.value.trim());
+
+    const xhr=new XMLHttpRequest();
+    xhr.open('POST','/api/upload');
+
+    xhr.upload.addEventListener('progress',e=>{
+      if(e.lengthComputable){
+        const pct=Math.round((e.loaded/e.total)*100);
+        progressBar.style.width=pct+'%';
+        progressText.textContent=pct+'%';
+      }
+    });
+
+    xhr.addEventListener('load',()=>{
+      progressWrap.classList.remove('active');
+      progressBar.style.width='0%';
+      try{
+        const res=JSON.parse(xhr.responseText);
+        if(xhr.status===200&&res.success){
+          successText.textContent=`Vielen Dank${uploaderName.value.trim()?', '+uploaderName.value.trim():''}! ${res.count} Foto${res.count>1?'s':''} wurde${res.count>1?'n':''} erfolgreich hochgeladen.`;
+          successMsg.classList.add('active');
+          selectedFiles=[];
+          updatePreview();
+          uploaderName.value='';
+          loadGallery();
+        }else{
+          showError(res.error||'Upload fehlgeschlagen.');
+        }
+      }catch(e){
+        showError('Unerwartete Serverantwort.');
+      }
+      uploadBtn.disabled=false;
+    });
+
+    xhr.addEventListener('error',()=>{
+      progressWrap.classList.remove('active');
+      showError('Verbindung zum Server fehlgeschlagen.');
+      uploadBtn.disabled=false;
+    });
+
+    xhr.send(formData);
+  }
+
+  function showError(msg){
+    errorMsg.textContent=msg;
+    errorMsg.classList.add('active');
+    setTimeout(()=>errorMsg.classList.remove('active'),5000);
+  }
+
+  async function loadGallery(){
+    galleryLoading.classList.remove('hidden');
+    galleryEmpty.classList.add('hidden');
+    galleryGrid.innerHTML='';
+    try{
+      const res=await fetch('/api/photos');
+      const photos=await res.json();
+      galleryLoading.classList.add('hidden');
+      if(photos.length===0){
+        galleryEmpty.classList.remove('hidden');
+        return;
+      }
+      galleryEmpty.classList.add('hidden');
+      photos.forEach(p=>{
+        const div=document.createElement('div');
+        div.className='gallery-item';
+        const img=document.createElement('img');
+        img.src=p.url;
+        img.loading='lazy';
+        img.alt='Hochzeitsfoto';
+        div.appendChild(img);
+        div.addEventListener('click',()=>{
+          lightboxImg.src=p.url;
+          lightbox.classList.add('active');
+        });
+        galleryGrid.appendChild(div);
+      });
+    }catch(e){
+      galleryLoading.classList.add('hidden');
+      galleryGrid.innerHTML='<p style="text-align:center;color:#999">Fotos konnten nicht geladen werden.</p>';
+    }
+  }
+
+  lightbox.addEventListener('click',e=>{
+    if(e.target===lightbox||e.target===lightboxClose){
+      lightbox.classList.remove('active');
+    }
+  });
+
+  document.addEventListener('keydown',e=>{
+    if(e.key==='Escape')lightbox.classList.remove('active');
+  });
+
+  loadGallery();
+})();
+</script>
+</body>
+</html>
