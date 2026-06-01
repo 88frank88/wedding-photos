@@ -18,17 +18,17 @@
 *{margin:0;padding:0;box-sizing:border-box}
 
 :root{
-  --rosa:#d4a0a0;
-  --rosa-light:#f0d4d4;
-  --rosa-dark:#b07878;
-  --rosa-bg:#fdf6f6;
-  --cream:#fef9f5;
-  --gold:#c9a96e;
-  --gold-light:#e8d5a8;
-  --text:#4a3a3a;
-  --text-light:#7a6a6a;
+  --rosa:#b8a9d4;
+  --rosa-light:#d8cfe8;
+  --rosa-dark:#8b6fb0;
+  --rosa-bg:#ede7f3;
+  --cream:#f3eff8;
+  --gold:#a89cc8;
+  --gold-light:#c8bfe0;
+  --text:#4a3a5a;
+  --text-light:#7a6a8a;
   --white:#ffffff;
-  --shadow:0 4px 24px rgba(180,120,120,0.12);
+  --shadow:0 4px 24px rgba(139,111,176,0.12);
 }
 
 body{
@@ -49,9 +49,9 @@ body{
   text-align:center;
   padding:40px 20px;
   background:
-    radial-gradient(ellipse at 20% 50%, rgba(212,160,160,0.15) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 50%, rgba(212,160,160,0.12) 0%, transparent 50%),
-    radial-gradient(ellipse at 50% 0%, rgba(201,169,110,0.08) 0%, transparent 40%),
+    radial-gradient(ellipse at 20% 50%, rgba(184,169,212,0.18) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 50%, rgba(168,156,200,0.14) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 0%, rgba(139,111,176,0.10) 0%, transparent 40%),
     var(--cream);
 }
 
@@ -60,7 +60,7 @@ body{
   position:absolute;
   top:0;left:0;right:0;bottom:0;
   background-image:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cpath d='M100 20c-15 0-25 20-25 20s-20-5-30 10c-8 12 0 25 0 25s-15 10-10 25c5 15 20 15 20 15s-5 20 10 30c12 8 25 0 25 0s10 15 25 10c15-5 15-20 15-20s20 5 30-10c8-12 0-25 0-25s15-10 10-25c-5-15-20-15-20-15s5-20-10-30c-12-8-25 0-25 0s-10-15-25-10z' fill='none' stroke='rgba(212,160,160,0.06)' stroke-width='0.5'/%3E%3C/svg%3E");
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cpath d='M100 20c-15 0-25 20-25 20s-20-5-30 10c-8 12 0 25 0 25s-15 10-10 25c5 15 20 15 20 15s-5 20 10 30c12 8 25 0 25 0s10 15 25 10c15-5 15-20 15-20s20 5 30-10c8-12 0-25 0-25s15-10 10-25c-5-15-20-15-20-15s5-20-10-30c-12-8-25 0-25 0s-10-15-25-10z' fill='none' stroke='rgba(184,169,212,0.07)' stroke-width='0.5'/%3E%3C/svg%3E");
   background-size:300px;
   opacity:0.6;
   pointer-events:none;
@@ -79,21 +79,26 @@ body{
 .hero h1{
   font-family:'Mistrully',cursive;
   font-size:clamp(48px,10vw,96px);
-  color:var(--rosa-dark);
+  color:#ffffff;
   line-height:1.1;
   margin-bottom:8px;
   position:relative;
   z-index:1;
+  letter-spacing:5px;
+  text-shadow:0 2px 8px rgba(100,60,150,0.3);
+  transform:scaleX(0.92);
 }
 
 .hero-ampersand{
   display:block;
   font-family:'Mistrully',cursive;
   font-size:clamp(28px,5vw,48px);
-  color:var(--gold);
+  color:#ffffff;
   margin:-8px 0;
   position:relative;
   z-index:1;
+  letter-spacing:3px;
+  text-shadow:0 2px 6px rgba(100,60,150,0.25);
 }
 
 .hero-subtitle{
@@ -133,9 +138,11 @@ body{
 .section-title{
   font-family:'Mistrully',cursive;
   font-size:clamp(32px,6vw,52px);
-  color:var(--rosa-dark);
+  color:#ffffff;
   text-align:center;
   margin-bottom:12px;
+  letter-spacing:3px;
+  text-shadow:0 1px 4px rgba(100,60,150,0.2);
 }
 
 .section-subtitle{
@@ -230,7 +237,7 @@ body{
 
 .upload-btn:hover{
   transform:translateY(-2px);
-  box-shadow:0 6px 20px rgba(180,120,120,0.3);
+  box-shadow:0 6px 20px rgba(139,111,176,0.3);
 }
 
 .upload-btn:disabled{
@@ -379,7 +386,8 @@ body{
   padding:0 20px;
   font-family:'Mistrully',cursive;
   font-size:28px;
-  color:var(--rosa);
+  color:#ffffff;
+  text-shadow:0 1px 4px rgba(100,60,150,0.2);
 }
 
 .gallery{
@@ -400,14 +408,14 @@ body{
   margin-bottom:16px;
   border-radius:12px;
   overflow:hidden;
-  box-shadow:0 2px 12px rgba(180,120,120,0.1);
+  box-shadow:0 2px 12px rgba(139,111,176,0.1);
   transition:transform 0.3s,box-shadow 0.3s;
   cursor:pointer;
 }
 
 .gallery-item:hover{
   transform:translateY(-4px);
-  box-shadow:0 8px 28px rgba(180,120,120,0.2);
+  box-shadow:0 8px 28px rgba(139,111,176,0.2);
 }
 
 .gallery-item img{
