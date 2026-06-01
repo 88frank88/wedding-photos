@@ -25,6 +25,8 @@
   --cream:#f3eff8;
   --gold:#a89cc8;
   --gold-light:#c8bfe0;
+  --btn:#c9b896;
+  --btn-dark:#a89870;
   --text:#4a3a5a;
   --text-light:#7a6a8a;
   --white:#ffffff;
@@ -224,7 +226,7 @@ body{
   display:inline-block;
   margin-top:24px;
   padding:14px 40px;
-  background:linear-gradient(135deg,var(--rosa) 0%,var(--rosa-dark) 100%);
+  background:linear-gradient(135deg,var(--btn) 0%,var(--btn-dark) 100%);
   color:var(--white);
   border:none;
   border-radius:30px;
@@ -237,7 +239,7 @@ body{
 
 .upload-btn:hover{
   transform:translateY(-2px);
-  box-shadow:0 6px 20px rgba(139,111,176,0.3);
+  box-shadow:0 6px 20px rgba(169,152,112,0.35);
 }
 
 .upload-btn:disabled{
@@ -266,7 +268,7 @@ body{
 
 .progress-bar-fill{
   height:100%;
-  background:linear-gradient(90deg,var(--rosa),var(--rosa-dark));
+  background:linear-gradient(90deg,var(--btn),var(--btn-dark));
   border-radius:4px;
   width:0%;
   transition:width 0.3s;
@@ -344,7 +346,7 @@ body{
 }
 
 .success-msg p{
-  color:var(--rosa-dark);
+  color:var(--btn-dark);
   font-size:16px;
 }
 
