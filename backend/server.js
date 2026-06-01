@@ -70,7 +70,10 @@ const ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.heic', '.webp'];
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const category = req.body.category || 'feier';
+    let category = 'feier';
+    if (req.body && req.body.category && CATEGORIES[req.body.category]) {
+      category = req.body.category;
+    }
     const catDir = path.join(UPLOAD_DIR, category);
     if (!fs.existsSync(catDir)) {
       fs.mkdirSync(catDir, { recursive: true });
@@ -115,15 +118,26 @@ app.post('/api/upload', checkUploadRate, upload.array('files[]', MAX_FILES), (re
     return res.status(400).json({ success: false, error: 'Invalid category. Must be one of: standesamt, kirche, feier' });
   }
   const uploaderName = req.body.uploaderName || '';
-  const files = req.files.map(f => ({
-    filename: f.filename,
-    originalName: f.originalname,
-    size: f.size,
-    url: `/uploads/${category}/${f.filename}`,
-    uploadedAt: new Date().toISOString(),
-    uploaderName,
-    category
-  }));
+  const catDir = path.join(UPLOAD_DIR, category);
+  if (!fs.existsSync(catDir)) {
+    fs.mkdirSync(catDir, { recursive: true });
+  }
+  const files = req.files.map(f => {
+    const savedPath = f.path;
+    const targetPath = path.join(catDir, f.filename);
+    if (savedPath !== targetPath) {
+      fs.renameSync(savedPath, targetPath);
+    }
+    return {
+      filename: f.filename,
+      originalName: f.originalname,
+      size: f.size,
+      url: `/uploads/${category}/${f.filename}`,
+      uploadedAt: new Date().toISOString(),
+      uploaderName,
+      category
+    };
+  });
   res.json({ success: true, count: files.length, files, category: CATEGORIES[category] });
 });
 

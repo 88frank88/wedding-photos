@@ -760,9 +760,9 @@ footer .heart{
     progressWrap.classList.add('active');
 
     const formData=new FormData();
-    selectedFiles.forEach(f=>formData.append('files[]',f));
-    formData.append('uploaderName',uploaderName.value.trim());
     formData.append('category',categorySelect.value);
+    formData.append('uploaderName',uploaderName.value.trim());
+    selectedFiles.forEach(f=>formData.append('files[]',f));
 
     const xhr=new XMLHttpRequest();
     xhr.open('POST','/api/upload');
