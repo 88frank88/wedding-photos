@@ -20,9 +20,21 @@ const COUPLE_NAME = process.env.COUPLE_NAME || 'Irina & Alexander';
 const WEDDING_DATE = process.env.WEDDING_DATE || '26. Juni 2026';
 const ALLOWED_ORIGINS = process.env.CORS_ORIGINS || '';
 
+const CATEGORIES = {
+  standesamt: 'Standesamtliche Trauung',
+  kirche: 'Kirchliche Trauung',
+  feier: 'Feier'
+};
+
 if (!fs.existsSync(UPLOAD_DIR)) {
   fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 }
+Object.keys(CATEGORIES).forEach(cat => {
+  const catDir = path.join(UPLOAD_DIR, cat);
+  if (!fs.existsSync(catDir)) {
+    fs.mkdirSync(catDir, { recursive: true });
+  }
+});
 
 app.use(helmet({
   contentSecurityPolicy: false,
@@ -57,7 +69,14 @@ const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/heic', 'im
 const ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.heic', '.webp'];
 
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, UPLOAD_DIR),
+  destination: (req, file, cb) => {
+    const category = req.body.category || 'feier';
+    const catDir = path.join(UPLOAD_DIR, category);
+    if (!fs.existsSync(catDir)) {
+      fs.mkdirSync(catDir, { recursive: true });
+    }
+    cb(null, catDir);
+  },
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname).toLowerCase();
     const safeExt = ALLOWED_EXTENSIONS.includes(ext) ? ext : '.jpg';
@@ -91,16 +110,21 @@ app.post('/api/upload', checkUploadRate, upload.array('files[]', MAX_FILES), (re
   if (!req.files || req.files.length === 0) {
     return res.status(400).json({ success: false, error: 'No files uploaded' });
   }
+  const category = req.body.category || '';
+  if (!CATEGORIES[category]) {
+    return res.status(400).json({ success: false, error: 'Invalid category. Must be one of: standesamt, kirche, feier' });
+  }
   const uploaderName = req.body.uploaderName || '';
   const files = req.files.map(f => ({
     filename: f.filename,
     originalName: f.originalname,
     size: f.size,
-    url: `/uploads/${f.filename}`,
+    url: `/uploads/${category}/${f.filename}`,
     uploadedAt: new Date().toISOString(),
-    uploaderName
+    uploaderName,
+    category
   }));
-  res.json({ success: true, count: files.length, files });
+  res.json({ success: true, count: files.length, files, category: CATEGORIES[category] });
 });
 
 app.use((err, req, res, next) => {
@@ -120,22 +144,45 @@ app.use((err, req, res, next) => {
   res.status(500).json({ success: false, error: 'Internal server error' });
 });
 
+function getPhotosForCategory(cat) {
+  const catDir = path.join(UPLOAD_DIR, cat);
+  if (!fs.existsSync(catDir)) return [];
+  const files = fs.readdirSync(catDir).filter(f => {
+    const ext = path.extname(f).toLowerCase();
+    return ALLOWED_EXTENSIONS.includes(ext);
+  });
+  return files.map(f => {
+    const stat = fs.statSync(path.join(catDir, f));
+    return {
+      filename: f,
+      url: `/uploads/${cat}/${f}`,
+      size: stat.size,
+      uploadedAt: stat.mtime.toISOString(),
+      category: cat
+    };
+  }).sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt));
+}
+
+function getAllPhotos() {
+  const result = {};
+  let totalCount = 0;
+  Object.keys(CATEGORIES).forEach(cat => {
+    result[cat] = getPhotosForCategory(cat);
+    totalCount += result[cat].length;
+  });
+  result._total = totalCount;
+  return result;
+}
+
 app.get('/api/photos', (req, res) => {
   try {
-    const files = fs.readdirSync(UPLOAD_DIR).filter(f => {
-      const ext = path.extname(f).toLowerCase();
-      return ALLOWED_EXTENSIONS.includes(ext);
-    });
-    const photos = files.map(f => {
-      const stat = fs.statSync(path.join(UPLOAD_DIR, f));
-      return {
-        filename: f,
-        url: `/uploads/${f}`,
-        size: stat.size,
-        uploadedAt: stat.mtime.toISOString()
-      };
-    }).sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt));
-    res.json(photos);
+    const cat = req.query.category;
+    if (cat && CATEGORIES[cat]) {
+      res.json(getPhotosForCategory(cat));
+    } else {
+      const all = getAllPhotos();
+      res.json(all);
+    }
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to list photos' });
@@ -144,16 +191,17 @@ app.get('/api/photos', (req, res) => {
 
 app.get('/api/health', (req, res) => {
   try {
-    const files = fs.readdirSync(UPLOAD_DIR).filter(f => {
-      const ext = path.extname(f).toLowerCase();
-      return ALLOWED_EXTENSIONS.includes(ext);
-    });
+    let totalCount = 0;
     let totalSize = 0;
-    files.forEach(f => {
-      totalSize += fs.statSync(path.join(UPLOAD_DIR, f)).size;
+    const counts = {};
+    Object.keys(CATEGORIES).forEach(cat => {
+      const photos = getPhotosForCategory(cat);
+      counts[cat] = photos.length;
+      totalCount += photos.length;
+      photos.forEach(p => totalSize += p.size);
     });
     const diskUsageMB = (totalSize / (1024 * 1024)).toFixed(2);
-    res.json({ status: 'ok', photoCount: files.length, diskUsage: `${diskUsageMB} MB` });
+    res.json({ status: 'ok', photoCount: totalCount, diskUsage: `${diskUsageMB} MB`, categories: counts });
   } catch (err) {
     res.json({ status: 'ok', photoCount: 0, diskUsage: '0 MB' });
   }
@@ -176,23 +224,28 @@ function basicAuth(req, res, next) {
 
 app.get('/admin', basicAuth, (req, res) => {
   try {
-    const files = fs.readdirSync(UPLOAD_DIR).filter(f => {
-      const ext = path.extname(f).toLowerCase();
-      return ALLOWED_EXTENSIONS.includes(ext);
-    });
+    const all = getAllPhotos();
+    const total = all._total;
     let totalSize = 0;
-    const photos = files.map(f => {
-      const stat = fs.statSync(path.join(UPLOAD_DIR, f));
-      totalSize += stat.size;
-      return {
-        filename: f,
-        url: `/uploads/${f}`,
-        size: stat.size,
-        uploadedAt: stat.mtime.toISOString()
-      };
-    }).sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt));
-
+    Object.keys(CATEGORIES).forEach(cat => {
+      all[cat].forEach(p => totalSize += p.size);
+    });
     const diskUsageMB = (totalSize / (1024 * 1024)).toFixed(2);
+
+    let galleryHtml = '';
+    Object.keys(CATEGORIES).forEach(cat => {
+      const photos = all[cat];
+      galleryHtml += `<h2 style="margin:30px 0 10px;font-size:20px;color:#8b6fb0">${CATEGORIES[cat]} (${photos.length})</h2>`;
+      if (photos.length === 0) {
+        galleryHtml += '<p style="color:#999;margin-bottom:20px">Noch keine Fotos.</p>';
+      } else {
+        galleryHtml += '<div class="grid">';
+        photos.forEach(p => {
+          galleryHtml += `<div class="card"><img src="${p.url}" loading="lazy"><div class="card-info">${p.filename}<br>${(p.size/1024/1024).toFixed(2)} MB</div></div>`;
+        });
+        galleryHtml += '</div>';
+      }
+    });
 
     const html = `<!DOCTYPE html>
 <html lang="de">
@@ -206,14 +259,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .header{background:#fff;padding:20px;border-radius:12px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,0.1)}
 .header h1{font-size:24px;margin-bottom:8px}
 .stats{display:flex;gap:20px;margin-top:12px;flex-wrap:wrap}
-.stat{background:#f8f0f0;padding:12px 20px;border-radius:8px;font-size:14px}
-.stat strong{display:block;font-size:20px;color:#b07878}
+.stat{background:#f0ebf5;padding:12px 20px;border-radius:8px;font-size:14px}
+.stat strong{display:block;font-size:20px;color:#8b6fb0}
 .actions{margin:20px 0}
-.btn{display:inline-block;padding:12px 24px;background:#b07878;color:#fff;border:none;border-radius:8px;font-size:16px;cursor:pointer;text-decoration:none;margin-right:10px}
-.btn:hover{background:#967070}
+.btn{display:inline-block;padding:12px 24px;background:#8b6fb0;color:#fff;border:none;border-radius:8px;font-size:16px;cursor:pointer;text-decoration:none;margin-right:10px}
+.btn:hover{background:#7a5ea0}
 .btn-danger{background:#c0392b}
 .btn-danger:hover{background:#a93226}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin-top:20px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin-top:10px}
 .card{background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.1)}
 .card img{width:100%;height:180px;object-fit:cover}
 .card-info{padding:10px;font-size:12px;color:#666}
@@ -224,18 +277,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 <h1>Admin Panel - ${COUPLE_NAME}</h1>
 <p>${WEDDING_DATE}</p>
 <div class="stats">
-<div class="stat"><strong>${photos.length}</strong>Fotos</div>
+<div class="stat"><strong>${total}</strong>Fotos gesamt</div>
 <div class="stat"><strong>${diskUsageMB} MB</strong>Speicher</div>
+${Object.keys(CATEGORIES).map(cat => `<div class="stat"><strong>${all[cat].length}</strong>${CATEGORIES[cat]}</div>`).join('')}
 </div>
 </div>
 <div class="actions">
-<a href="/admin/download-all" class="btn">Alle Fotos als ZIP herunterladen</a>
+<a href="/admin/download-all" class="btn">Alle Fotos als ZIP</a>
 <button class="btn btn-danger" onclick="if(confirm('Wirklich ALLE Fotos löschen?')){fetch('/admin/delete-all',{method:'POST'}).then(r=>r.json()).then(d=>{alert(d.message||'Fehlgeschlagen');location.reload()})}">Alle Fotos löschen</button>
 <a href="/" class="btn">Zurück zur Webseite</a>
 </div>
-<div class="grid">
-${photos.map(p => `<div class="card"><img src="${p.url}" loading="lazy"><div class="card-info">${p.filename}<br>${(p.size/1024/1024).toFixed(2)} MB</div></div>`).join('')}
-</div>
+${galleryHtml}
 </body>
 </html>`;
     res.send(html);
@@ -247,11 +299,14 @@ ${photos.map(p => `<div class="card"><img src="${p.url}" loading="lazy"><div cla
 
 app.get('/admin/download-all', basicAuth, (req, res) => {
   try {
-    const files = fs.readdirSync(UPLOAD_DIR).filter(f => {
-      const ext = path.extname(f).toLowerCase();
-      return ALLOWED_EXTENSIONS.includes(ext);
+    let totalFiles = 0;
+    Object.keys(CATEGORIES).forEach(cat => {
+      const catDir = path.join(UPLOAD_DIR, cat);
+      if (fs.existsSync(catDir)) {
+        totalFiles += fs.readdirSync(catDir).filter(f => ALLOWED_EXTENSIONS.includes(path.extname(f).toLowerCase())).length;
+      }
     });
-    if (files.length === 0) {
+    if (totalFiles === 0) {
       return res.status(404).json({ error: 'No photos to download' });
     }
     const zipName = `hochzeit-fotos-${Date.now()}.zip`;
@@ -259,9 +314,14 @@ app.get('/admin/download-all', basicAuth, (req, res) => {
     res.setHeader('Content-Disposition', `attachment; filename="${zipName}"`);
     const archive = archiver('zip', { zlib: { level: 5 } });
     archive.pipe(res);
-    files.forEach(f => {
-      const filePath = path.join(UPLOAD_DIR, f);
-      archive.file(filePath, { name: f });
+    Object.keys(CATEGORIES).forEach(cat => {
+      const catDir = path.join(UPLOAD_DIR, cat);
+      if (fs.existsSync(catDir)) {
+        const files = fs.readdirSync(catDir).filter(f => ALLOWED_EXTENSIONS.includes(path.extname(f).toLowerCase()));
+        files.forEach(f => {
+          archive.file(path.join(catDir, f), { name: `${CATEGORIES[cat]}/${f}` });
+        });
+      }
     });
     archive.finalize();
   } catch (err) {
@@ -272,12 +332,22 @@ app.get('/admin/download-all', basicAuth, (req, res) => {
 
 app.post('/admin/delete-all', basicAuth, (req, res) => {
   try {
-    const files = fs.readdirSync(UPLOAD_DIR).filter(f => {
+    let total = 0;
+    Object.keys(CATEGORIES).forEach(cat => {
+      const catDir = path.join(UPLOAD_DIR, cat);
+      if (fs.existsSync(catDir)) {
+        const files = fs.readdirSync(catDir).filter(f => ALLOWED_EXTENSIONS.includes(path.extname(f).toLowerCase()));
+        files.forEach(f => fs.unlinkSync(path.join(catDir, f)));
+        total += files.length;
+      }
+    });
+    const rootFiles = fs.readdirSync(UPLOAD_DIR).filter(f => {
       const ext = path.extname(f).toLowerCase();
       return ALLOWED_EXTENSIONS.includes(ext);
     });
-    files.forEach(f => fs.unlinkSync(path.join(UPLOAD_DIR, f)));
-    res.json({ success: true, message: `${files.length} Fotos gelöscht` });
+    rootFiles.forEach(f => fs.unlinkSync(path.join(UPLOAD_DIR, f)));
+    total += rootFiles.length;
+    res.json({ success: true, message: `${total} Fotos gelöscht` });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to delete photos' });
@@ -292,4 +362,5 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`Wedding Photos server running on port ${PORT}`);
   console.log(`Couple: ${COUPLE_NAME}`);
   console.log(`Upload directory: ${UPLOAD_DIR}`);
+  console.log(`Categories: ${Object.keys(CATEGORIES).join(', ')}`);
 });

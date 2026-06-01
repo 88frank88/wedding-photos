@@ -74,7 +74,7 @@ body{
   letter-spacing:6px;
   text-transform:uppercase;
   color:var(--gold-light);
-  margin-bottom:24px;
+  margin-bottom:60px;
   font-weight:400;
 }
 
@@ -223,6 +223,61 @@ body{
 
 .name-input:focus{
   border-color:var(--rosa);
+}
+
+.category-select-wrap{
+  margin-top:20px;
+  text-align:center;
+}
+
+.category-select-wrap label{
+  display:block;
+  font-size:14px;
+  color:var(--text-light);
+  margin-bottom:8px;
+  font-style:italic;
+}
+
+.category-select{
+  width:100%;
+  max-width:320px;
+  padding:12px 20px;
+  border:1px solid var(--rosa-light);
+  border-radius:30px;
+  font-family:'Cormorant Garamond',serif;
+  font-size:16px;
+  color:var(--text);
+  text-align:center;
+  outline:none;
+  transition:border-color 0.3s;
+  background:rgba(58,48,90,0.5);
+  appearance:none;
+  -webkit-appearance:none;
+  cursor:pointer;
+}
+
+.category-select:focus{
+  border-color:var(--rosa);
+}
+
+.category-select option{
+  background:#2a2440;
+  color:var(--text);
+}
+
+.gallery-section{
+  margin-bottom:60px;
+}
+
+.gallery-section-title{
+  font-family:'Mistrully',cursive;
+  font-size:clamp(24px,4vw,36px);
+  color:#ffffff;
+  text-align:center;
+  margin-bottom:20px;
+  font-style:italic;
+  letter-spacing:2px;
+  text-shadow:0 1px 4px rgba(100,60,150,0.2);
 }
 
 .upload-btn{
@@ -518,6 +573,16 @@ footer .heart{
     <input type="text" id="uploaderName" class="name-input" placeholder="z.B. Onkel Hans">
   </div>
 
+  <div class="category-select-wrap">
+    <label for="categorySelect">Veranstaltung *</label>
+    <select id="categorySelect" class="category-select">
+      <option value="">— Bitte wählen —</option>
+      <option value="standesamt">Standesamtliche Trauung</option>
+      <option value="kirche">Kirchliche Trauung</option>
+      <option value="feier">Feier</option>
+    </select>
+  </div>
+
   <div class="file-preview" id="filePreview">
     <div class="file-preview-grid" id="previewGrid"></div>
   </div>
@@ -542,11 +607,29 @@ footer .heart{
 <div class="divider"><span>Galerie</span></div>
 
 <section class="section" id="gallery">
-  <h2 class="section-title">Eure Erinnerungen</h2>
-  <p class="section-subtitle">Alle hochgeladenen Fotos auf einen Blick</p>
   <div class="gallery-loading" id="galleryLoading">Fotos werden geladen...</div>
-  <div class="gallery" id="galleryGrid"></div>
-  <div class="gallery-empty hidden" id="galleryEmpty">Noch keine Fotos vorhanden &mdash; seid die Ersten!</div>
+
+  <div class="gallery-section" id="gallery-standesamt">
+    <h2 class="gallery-section-title">Standesamtliche Trauung</h2>
+    <div class="gallery" id="galleryGrid-standesamt"></div>
+    <div class="gallery-empty" id="galleryEmpty-standesamt">Noch keine Fotos &mdash; seid die Ersten!</div>
+  </div>
+
+  <div class="divider"><span>&#10045;</span></div>
+
+  <div class="gallery-section" id="gallery-kirche">
+    <h2 class="gallery-section-title">Kirchliche Trauung</h2>
+    <div class="gallery" id="galleryGrid-kirche"></div>
+    <div class="gallery-empty" id="galleryEmpty-kirche">Noch keine Fotos &mdash; seid die Ersten!</div>
+  </div>
+
+  <div class="divider"><span>&#10045;</span></div>
+
+  <div class="gallery-section" id="gallery-feier">
+    <h2 class="gallery-section-title">Feier</h2>
+    <div class="gallery" id="galleryGrid-feier"></div>
+    <div class="gallery-empty" id="galleryEmpty-feier">Noch keine Fotos &mdash; seid die Ersten!</div>
+  </div>
 </section>
 
 <div class="lightbox" id="lightbox">
@@ -572,14 +655,21 @@ footer .heart{
   const filePreview=document.getElementById('filePreview');
   const previewGrid=document.getElementById('previewGrid');
   const uploaderName=document.getElementById('uploaderName');
-  const galleryGrid=document.getElementById('galleryGrid');
+  const categorySelect=document.getElementById('categorySelect');
   const galleryLoading=document.getElementById('galleryLoading');
-  const galleryEmpty=document.getElementById('galleryEmpty');
   const lightbox=document.getElementById('lightbox');
   const lightboxImg=document.getElementById('lightboxImg');
   const lightboxClose=document.getElementById('lightboxClose');
 
+  const CATEGORIES=['standesamt','kirche','feier'];
+
   let selectedFiles=[];
+
+  function checkUploadReady(){
+    uploadBtn.disabled=selectedFiles.length===0||!categorySelect.value;
+  }
+
+  categorySelect.addEventListener('change',checkUploadReady);
 
   dropZone.addEventListener('click',()=>fileInput.click());
 
@@ -612,11 +702,11 @@ footer .heart{
       const f=files[i];
       const ext='.'+f.name.split('.').pop().toLowerCase();
       if(!allowed.includes(f.type)&&!allowedExt.includes(ext)){
-        showError(`"${f.name}" ist kein unterstuetztes Format. Erlaubt: JPG, PNG, HEIC, WebP`);
+        showError('"'+f.name+'" ist kein unterstuetztes Format. Erlaubt: JPG, PNG, HEIC, WebP');
         continue;
       }
       if(f.size>maxSize){
-        showError(`"${f.name}" ist zu gross. Max. 20 MB pro Foto.`);
+        showError('"'+f.name+'" ist zu gross. Max. 20 MB pro Foto.');
         continue;
       }
       if(selectedFiles.length>=20){
@@ -626,7 +716,7 @@ footer .heart{
       selectedFiles.push(f);
     }
     updatePreview();
-    uploadBtn.disabled=selectedFiles.length===0;
+    checkUploadReady();
   }
 
   function updatePreview(){
@@ -648,7 +738,7 @@ footer .heart{
         e.stopPropagation();
         selectedFiles.splice(i,1);
         updatePreview();
-        uploadBtn.disabled=selectedFiles.length===0;
+        checkUploadReady();
       });
       div.appendChild(img);
       div.appendChild(btn);
@@ -660,6 +750,10 @@ footer .heart{
 
   function uploadFiles(){
     if(selectedFiles.length===0)return;
+    if(!categorySelect.value){
+      showError('Bitte eine Veranstaltung auswaehlen.');
+      return;
+    }
     uploadBtn.disabled=true;
     errorMsg.classList.remove('active');
     successMsg.classList.remove('active');
@@ -668,6 +762,7 @@ footer .heart{
     const formData=new FormData();
     selectedFiles.forEach(f=>formData.append('files[]',f));
     formData.append('uploaderName',uploaderName.value.trim());
+    formData.append('category',categorySelect.value);
 
     const xhr=new XMLHttpRequest();
     xhr.open('POST','/api/upload');
@@ -686,11 +781,13 @@ footer .heart{
       try{
         const res=JSON.parse(xhr.responseText);
         if(xhr.status===200&&res.success){
-          successText.textContent=`Vielen Dank${uploaderName.value.trim()?', '+uploaderName.value.trim():''}! ${res.count} Foto${res.count>1?'s':''} wurde${res.count>1?'n':''} erfolgreich hochgeladen.`;
+          const catLabel=res.category||categorySelect.options[categorySelect.selectedIndex].text;
+          successText.textContent='Vielen Dank'+(uploaderName.value.trim()?', '+uploaderName.value.trim():'')+'! '+res.count+' Foto'+(res.count>1?'s':'')+' wurde'+(res.count>1?'n':'')+' erfolgreich hochgeladen f\u00fcr: '+catLabel;
           successMsg.classList.add('active');
           selectedFiles=[];
           updatePreview();
           uploaderName.value='';
+          categorySelect.value='';
           loadGallery();
         }else{
           showError(res.error||'Upload fehlgeschlagen.');
@@ -698,13 +795,13 @@ footer .heart{
       }catch(e){
         showError('Unerwartete Serverantwort.');
       }
-      uploadBtn.disabled=false;
+      checkUploadReady();
     });
 
     xhr.addEventListener('error',()=>{
       progressWrap.classList.remove('active');
       showError('Verbindung zum Server fehlgeschlagen.');
-      uploadBtn.disabled=false;
+      checkUploadReady();
     });
 
     xhr.send(formData);
@@ -716,36 +813,47 @@ footer .heart{
     setTimeout(()=>errorMsg.classList.remove('active'),5000);
   }
 
+  function renderCategoryGallery(cat,photos){
+    const grid=document.getElementById('galleryGrid-'+cat);
+    const empty=document.getElementById('galleryEmpty-'+cat);
+    if(!grid||!empty)return;
+    grid.innerHTML='';
+    if(!photos||photos.length===0){
+      empty.style.display='block';
+      return;
+    }
+    empty.style.display='none';
+    photos.forEach(p=>{
+      const div=document.createElement('div');
+      div.className='gallery-item';
+      const img=document.createElement('img');
+      img.src=p.url;
+      img.loading='lazy';
+      img.alt='Hochzeitsfoto';
+      div.appendChild(img);
+      div.addEventListener('click',()=>{
+        lightboxImg.src=p.url;
+        lightbox.classList.add('active');
+      });
+      grid.appendChild(div);
+    });
+  }
+
   async function loadGallery(){
     galleryLoading.classList.remove('hidden');
-    galleryEmpty.classList.add('hidden');
-    galleryGrid.innerHTML='';
+    CATEGORIES.forEach(cat=>{
+      const empty=document.getElementById('galleryEmpty-'+cat);
+      if(empty)empty.style.display='none';
+    });
     try{
       const res=await fetch('/api/photos');
-      const photos=await res.json();
+      const data=await res.json();
       galleryLoading.classList.add('hidden');
-      if(photos.length===0){
-        galleryEmpty.classList.remove('hidden');
-        return;
-      }
-      galleryEmpty.classList.add('hidden');
-      photos.forEach(p=>{
-        const div=document.createElement('div');
-        div.className='gallery-item';
-        const img=document.createElement('img');
-        img.src=p.url;
-        img.loading='lazy';
-        img.alt='Hochzeitsfoto';
-        div.appendChild(img);
-        div.addEventListener('click',()=>{
-          lightboxImg.src=p.url;
-          lightbox.classList.add('active');
-        });
-        galleryGrid.appendChild(div);
+      CATEGORIES.forEach(cat=>{
+        renderCategoryGallery(cat,data[cat]||[]);
       });
     }catch(e){
       galleryLoading.classList.add('hidden');
-      galleryGrid.innerHTML='<p style="text-align:center;color:#999">Fotos konnten nicht geladen werden.</p>';
     }
   }
 
