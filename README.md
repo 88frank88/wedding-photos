@@ -4,22 +4,47 @@ Foto-Upload-Webseite für unsere Hochzeit am 26. Juni 2026.
 
 ## Installation (1 Befehl)
 
+### Auf Proxmox-Host (erstellt automatisch einen LXC Container)
+
 ```bash
 curl -fsSL https://raw.githubusercontent.com/88frank88/wedding-photos/main/install.sh | bash
 ```
 
-### Voraussetzungen
+Das Skript fragt interaktiv ab:
+- **Container ID** (z.B. 200)
+- **Storage** (verfügbare Storages werden angezeigt)
+- **Netzwerk** (DHCP oder statische IP)
 
-- Proxmox LXC mit Ubuntu 22.04 oder 24.04
-- Mindestens 1 GB RAM, 10 GB Speicher
-- Root-Zugriff
+### Im LXC / Direkt auf Ubuntu
 
-### Nach der Installation
+```bash
+curl -fsSL https://raw.githubusercontent.com/88frank88/wedding-photos/main/install.sh | bash
+```
+
+## Update auf neueste Version
+
+Auf dem Proxmox-Host oder im LXC:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/88frank88/wedding-photos/main/install.sh | bash -s -- update
+```
+
+Das Skript erkennt automatisch eine bestehende Installation und vergleicht die Version mit dem neuesten GitHub Release. Bei einer frisch-Installation wird automatisch geprüft, ob bereits eine Version installiert ist, und ein Update angeboten.
+
+### Auf Proxmox-Host (Update eines Containers)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/88frank88/wedding-photos/main/install.sh | bash -s -- update
+```
+
+Dann wird nach der Container ID gefragt.
+
+## Nach der Installation
 
 | Funktion | URL |
 |----------|-----|
-| Webseite | `http://[LXC-IP]:3000` |
-| Admin-Panel | `http://[LXC-IP]:3000/admin` |
+| Webseite | `http://[IP]:3000` |
+| Admin-Panel | `http://[IP]:3000/admin` |
 
 Das Admin-Passwort wird am Ende der Installation angezeigt.
 
@@ -31,6 +56,15 @@ Fotos werden gespeichert unter: `/opt/wedding-photos/backend/uploads/`
 systemctl status wedding-photos     # Status prüfen
 journalctl -u wedding-photos -f     # Live-Logs
 systemctl restart wedding-photos    # Neustart
+```
+
+### Container-Verwaltung (Proxmox)
+
+```bash
+pct enter [ID]                      # In den Container wechseln
+pct status [ID]                     # Container-Status
+pct stop [ID]                       # Container stoppen
+pct start [ID]                      # Container starten
 ```
 
 ## Fotos sichern
@@ -69,7 +103,8 @@ systemctl enable --now wedding-photos
 
 ```
 wedding-photos/
-├── install.sh              ← Ein-Klick-Installer
+├── install.sh              ← Ein-Klick-Installer (Proxmox + LXC)
+├── VERSION                 ← Aktuelle Versionsnummer
 ├── README.md
 ├── .env.example
 ├── backend/
@@ -77,7 +112,9 @@ wedding-photos/
 │   ├── package.json
 │   └── uploads/            ← Foto-Speicherort
 ├── frontend/
-│   └── index.html          ← Single-Page-App
+│   ├── index.html          ← Single-Page-App
+│   └── fonts/
+│       └── Mistrully.ttf   ← Schriftart
 └── systemd/
     └── wedding-photos.service
 ```

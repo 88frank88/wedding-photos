@@ -30,6 +30,7 @@ app.use(helmet({
 }));
 app.use(express.json());
 app.use('/uploads', express.static(UPLOAD_DIR));
+app.use('/fonts', express.static(path.join(__dirname, '..', 'frontend', 'fonts')));
 app.use(express.static(path.join(__dirname, '..', 'frontend')));
 
 if (ALLOWED_ORIGINS) {
