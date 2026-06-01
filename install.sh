@@ -42,7 +42,7 @@ ask_yes_no() {
   local yn
   while true; do
     echo -en "${GOLD}  $prompt [${default^^}/$(if [ "$default" = "y" ]; then echo "N"; else echo "Y"; fi)]${NC} "
-    read -r yn
+    read -r yn < /dev/tty
     yn="${yn:-$default}"
     case "$yn" in
       [Yy]*) return 0 ;;
@@ -220,7 +220,7 @@ do_proxmox_install() {
   local ct_id
   while true; do
     echo -en "${GOLD}  Container ID (z.B. 200): ${NC}"
-    read -r ct_id
+    read -r ct_id < /dev/tty
     if [[ "$ct_id" =~ ^[0-9]+$ ]] && [ "$ct_id" -gt 0 ]; then
       if pct status "$ct_id" &>/dev/null; then
         print_error "Container $ct_id existiert bereits."
@@ -256,7 +256,7 @@ do_proxmox_install() {
   local storage_choice
   while true; do
     echo -en "${GOLD}  Storage auswählen [1-${#storage_array[@]}]: ${NC}"
-    read -r storage_choice
+    read -r storage_choice < /dev/tty
     if [[ "$storage_choice" =~ ^[0-9]+$ ]] && [ "$storage_choice" -ge 1 ] && [ "$storage_choice" -le "${#storage_array[@]}" ]; then
       break
     fi
@@ -273,7 +273,7 @@ do_proxmox_install() {
   local net_choice
   while true; do
     echo -en "${GOLD}  Auswahl [1/2]: ${NC}"
-    read -r net_choice
+    read -r net_choice < /dev/tty
     [[ "$net_choice" =~ ^[12]$ ]] && break
     print_error "Bitte 1 oder 2."
   done
@@ -284,7 +284,7 @@ do_proxmox_install() {
     local static_ip
     while true; do
       echo -en "${GOLD}  IP/CIDR (z.B. 192.168.1.100/24): ${NC}"
-      read -r static_ip
+      read -r static_ip < /dev/tty
       if [[ "$static_ip" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+/[0-9]+$ ]]; then
         break
       fi
@@ -292,7 +292,7 @@ do_proxmox_install() {
     done
     while true; do
       echo -en "${GOLD}  Gateway (z.B. 192.168.1.1): ${NC}"
-      read -r gateway
+      read -r gateway < /dev/tty
       if [[ "$gateway" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
         break
       fi
@@ -454,7 +454,7 @@ main() {
       local ct_id
       while true; do
         echo -en "${GOLD}  Container ID für Update: ${NC}"
-        read -r ct_id
+        read -r ct_id < /dev/tty
         if [[ "$ct_id" =~ ^[0-9]+$ ]] && pct status "$ct_id" &>/dev/null; then
           break
         fi
