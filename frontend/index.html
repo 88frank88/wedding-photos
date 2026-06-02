@@ -200,7 +200,7 @@ body{
 
 .category-btn .cat-label{
   font-family:'Cormorant Garamond',serif;
-  font-size:19px;
+  font-size:22px;
   font-weight:300;
   font-style:italic;
   color:var(--text);
@@ -301,7 +301,7 @@ body{
 
 .gallery-section-title{
   font-family:'Mistrully',cursive;
-  font-size:clamp(24px,4vw,36px);
+  font-size:clamp(28px,5vw,42px);
   color:#ffffff;
   text-align:center;
   margin-bottom:20px;
@@ -561,17 +561,17 @@ footer .heart{
   <div class="category-buttons">
     <button class="category-btn" data-category="standesamt">
       <span class="cat-badge" id="badge-standesamt">0</span>
-      <span class="cat-label">Standesamtliche Trauung</span>
+      <span class="cat-label">standesamtliche Trauung</span>
       <input type="file" multiple accept=".jpg,.jpeg,.png,.heic,.webp">
     </button>
     <button class="category-btn" data-category="kirche">
       <span class="cat-badge" id="badge-kirche">0</span>
-      <span class="cat-label">Kirchliche Trauung</span>
+      <span class="cat-label">kirchliche Trauung</span>
       <input type="file" multiple accept=".jpg,.jpeg,.png,.heic,.webp">
     </button>
     <button class="category-btn" data-category="feier">
       <span class="cat-badge" id="badge-feier">0</span>
-      <span class="cat-label">Feier</span>
+      <span class="cat-label">die Feier</span>
       <input type="file" multiple accept=".jpg,.jpeg,.png,.heic,.webp">
     </button>
   </div>
@@ -605,7 +605,7 @@ footer .heart{
   <div class="gallery-loading" id="galleryLoading">Fotos werden geladen...</div>
 
   <div class="gallery-section" id="gallery-standesamt">
-    <h2 class="gallery-section-title">Standesamtliche Trauung</h2>
+    <h2 class="gallery-section-title">standesamtliche Trauung</h2>
     <div class="gallery" id="galleryGrid-standesamt"></div>
     <div class="gallery-empty" id="galleryEmpty-standesamt">Noch keine Fotos &mdash; seid die Ersten!</div>
   </div>
@@ -613,7 +613,7 @@ footer .heart{
   <div class="divider"><span>&#10045;</span></div>
 
   <div class="gallery-section" id="gallery-kirche">
-    <h2 class="gallery-section-title">Kirchliche Trauung</h2>
+    <h2 class="gallery-section-title">kirchliche Trauung</h2>
     <div class="gallery" id="galleryGrid-kirche"></div>
     <div class="gallery-empty" id="galleryEmpty-kirche">Noch keine Fotos &mdash; seid die Ersten!</div>
   </div>
@@ -621,7 +621,7 @@ footer .heart{
   <div class="divider"><span>&#10045;</span></div>
 
   <div class="gallery-section" id="gallery-feier">
-    <h2 class="gallery-section-title">Feier</h2>
+    <h2 class="gallery-section-title">die Feier</h2>
     <div class="gallery" id="galleryGrid-feier"></div>
     <div class="gallery-empty" id="galleryEmpty-feier">Noch keine Fotos &mdash; seid die Ersten!</div>
   </div>
@@ -653,9 +653,9 @@ footer .heart{
   var lightboxClose=document.getElementById('lightboxClose');
 
   var CATEGORY_LABELS={
-    standesamt:'Standesamtliche Trauung',
-    kirche:'Kirchliche Trauung',
-    feier:'Feier'
+    standesamt:'standesamtliche Trauung',
+    kirche:'kirchliche Trauung',
+    feier:'die Feier'
   };
   var CATS=['standesamt','kirche','feier'];
 
