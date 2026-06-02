@@ -151,120 +151,121 @@ body{
   font-style:italic;
 }
 
-.section-subtitle{
-  text-align:center;
-  color:var(--text-light);
-  font-size:clamp(14px,2vw,18px);
-  font-style:italic;
-  margin-bottom:40px;
-  font-weight:300;
+.category-buttons{
+  display:flex;
+  justify-content:center;
+  gap:16px;
+  flex-wrap:wrap;
+  margin-bottom:30px;
 }
 
-.upload-area{
+.category-btn{
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:24px 28px;
   background:rgba(58,48,90,0.6);
-  border:2px dashed var(--rosa-light);
-  border-radius:20px;
-  padding:40px 30px;
-  text-align:center;
+  border:2px solid var(--rosa-light);
+  border-radius:16px;
+  color:var(--text);
   cursor:pointer;
   transition:all 0.3s ease;
-  position:relative;
+  min-width:180px;
+  text-align:center;
 }
 
-.upload-area:hover,.upload-area.dragover{
+.category-btn:hover{
   border-color:var(--rosa);
   background:rgba(58,48,90,0.8);
   transform:translateY(-2px);
   box-shadow:var(--shadow);
 }
 
-.upload-icon{
-  font-size:48px;
-  color:var(--rosa);
+.category-btn.active{
+  border-color:var(--btn);
+  background:linear-gradient(135deg,rgba(201,184,150,0.25) 0%,rgba(168,152,112,0.15) 100%);
+  box-shadow:0 0 20px rgba(201,184,150,0.2);
+}
+
+.category-btn .cat-icon{
+  font-size:32px;
+  margin-bottom:10px;
+}
+
+.category-btn .cat-label{
+  font-family:'Cormorant Garamond',serif;
+  font-size:16px;
+  font-weight:500;
+  color:var(--text);
+}
+
+.category-btn.active .cat-label{
+  color:#ffffff;
+}
+
+.category-btn input[type="file"]{
+  display:none;
+}
+
+.upload-preview-area{
+  text-align:center;
+  margin-top:10px;
+}
+
+.upload-preview-area .preview-label{
+  color:var(--btn);
+  font-size:15px;
   margin-bottom:16px;
-}
-
-.upload-text{
-  font-size:18px;
-  color:var(--text);
-  margin-bottom:8px;
-}
-
-.upload-hint{
-  font-size:14px;
-  color:var(--text-light);
-}
-
-.name-input-wrap{
-  margin-top:20px;
-  text-align:center;
-}
-
-.name-input-wrap label{
-  display:block;
-  font-size:14px;
-  color:var(--text-light);
-  margin-bottom:8px;
   font-style:italic;
 }
 
-.name-input{
-  width:100%;
-  max-width:320px;
-  padding:12px 20px;
-  border:1px solid var(--rosa-light);
-  border-radius:30px;
-  font-family:'Cormorant Garamond',serif;
-  font-size:16px;
-  color:var(--text);
-  text-align:center;
-  outline:none;
-  transition:border-color 0.3s;
-  background:rgba(58,48,90,0.5);
+.file-preview{
+  margin-top:16px;
+  display:none;
 }
 
-.name-input:focus{
-  border-color:var(--rosa);
-}
-
-.category-select-wrap{
-  margin-top:20px;
-  text-align:center;
-}
-
-.category-select-wrap label{
+.file-preview.active{
   display:block;
-  font-size:14px;
-  color:var(--text-light);
-  margin-bottom:8px;
-  font-style:italic;
 }
 
-.category-select{
+.file-preview-grid{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  justify-content:center;
+}
+
+.file-preview-item{
+  position:relative;
+  width:80px;
+  height:80px;
+  border-radius:10px;
+  overflow:hidden;
+  box-shadow:0 2px 8px rgba(0,0,0,0.3);
+}
+
+.file-preview-item img{
   width:100%;
-  max-width:320px;
-  padding:12px 20px;
-  border:1px solid var(--rosa-light);
-  border-radius:30px;
-  font-family:'Cormorant Garamond',serif;
-  font-size:16px;
-  color:var(--text);
-  text-align:center;
-  outline:none;
-  transition:border-color 0.3s;
-  background:rgba(58,48,90,0.5);
-  appearance:none;
-  -webkit-appearance:none;
+  height:100%;
+  object-fit:cover;
+}
+
+.file-preview-item .remove-btn{
+  position:absolute;
+  top:2px;right:2px;
+  width:22px;height:22px;
+  background:rgba(0,0,0,0.5);
+  color:#fff;
+  border:none;
+  border-radius:50%;
+  font-size:14px;
   cursor:pointer;
-}
-
-.category-select:focus{
-  border-color:var(--rosa);
-}
-
-.category-select option{
-  background:#2a2440;
-  color:var(--text);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  line-height:1;
 }
 
 .gallery-section{
@@ -338,53 +339,6 @@ body{
   font-size:14px;
   color:var(--text-light);
   text-align:center;
-}
-
-.file-preview{
-  margin-top:20px;
-  display:none;
-}
-
-.file-preview.active{
-  display:block;
-}
-
-.file-preview-grid{
-  display:flex;
-  flex-wrap:wrap;
-  gap:10px;
-  justify-content:center;
-}
-
-.file-preview-item{
-  position:relative;
-  width:80px;
-  height:80px;
-  border-radius:10px;
-  overflow:hidden;
-  box-shadow:0 2px 8px rgba(0,0,0,0.1);
-}
-
-.file-preview-item img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-}
-
-.file-preview-item .remove-btn{
-  position:absolute;
-  top:2px;right:2px;
-  width:22px;height:22px;
-  background:rgba(0,0,0,0.5);
-  color:#fff;
-  border:none;
-  border-radius:50%;
-  font-size:14px;
-  cursor:pointer;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  line-height:1;
 }
 
 .success-msg{
@@ -466,12 +420,17 @@ body{
   .hero-ampersand{font-size:clamp(22px,6vw,36px)}
   .hero-subtitle{font-size:clamp(13px,3vw,18px);margin-top:14px}
   .scroll-hint{display:none}
+  .category-buttons{flex-direction:column;align-items:center}
+  .category-btn{min-width:260px}
   .gallery{grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px}
 }
 
 @media(max-width:480px){
   .hero{padding:16px 10px}
   .hero-date{margin-bottom:20px;font-size:12px;letter-spacing:3px}
+  .category-btn{min-width:100%;padding:18px 16px}
+  .category-btn .cat-icon{font-size:26px}
+  .category-btn .cat-label{font-size:14px}
   .gallery{grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:6px}
 }
 
@@ -573,33 +532,31 @@ footer .heart{
   <h2 class="section-title">Fotos hochladen</h2>
   <p class="section-subtitle">Teilt eure liebsten Fotos von unserem besonderen Tag</p>
 
-  <div class="upload-area" id="dropZone">
-    <div class="upload-icon">&#128247;</div>
-    <p class="upload-text">Fotos hierher ziehen oder klicken zum Ausw&auml;hlen</p>
-    <p class="upload-hint">JPG, PNG, HEIC oder WebP &bull; max. 20 MB pro Foto &bull; max. 20 Fotos</p>
-    <input type="file" id="fileInput" multiple accept=".jpg,.jpeg,.png,.heic,.webp" style="display:none">
+  <div class="category-buttons">
+    <button class="category-btn" data-category="standesamt">
+      <span class="cat-icon">&#9878;</span>
+      <span class="cat-label">Standesamtliche Trauung</span>
+      <input type="file" multiple accept=".jpg,.jpeg,.png,.heic,.webp">
+    </button>
+    <button class="category-btn" data-category="kirche">
+      <span class="cat-icon">&#9961;</span>
+      <span class="cat-label">Kirchliche Trauung</span>
+      <input type="file" multiple accept=".jpg,.jpeg,.png,.heic,.webp">
+    </button>
+    <button class="category-btn" data-category="feier">
+      <span class="cat-icon">&#127881;</span>
+      <span class="cat-label">Feier</span>
+      <input type="file" multiple accept=".jpg,.jpeg,.png,.heic,.webp">
+    </button>
   </div>
 
-  <div class="name-input-wrap">
-    <label for="uploaderName">Dein Name (optional)</label>
-    <input type="text" id="uploaderName" class="name-input" placeholder="z.B. Onkel Hans">
+  <div class="upload-preview-area" id="uploadPreviewArea" style="display:none">
+    <p class="preview-label" id="previewLabel"></p>
+    <div class="file-preview" id="filePreview">
+      <div class="file-preview-grid" id="previewGrid"></div>
+    </div>
+    <button class="upload-btn" id="uploadBtn" disabled>Hochladen</button>
   </div>
-
-  <div class="category-select-wrap">
-    <label for="categorySelect">Veranstaltung *</label>
-    <select id="categorySelect" class="category-select">
-      <option value="">— Bitte wählen —</option>
-      <option value="standesamt">Standesamtliche Trauung</option>
-      <option value="kirche">Kirchliche Trauung</option>
-      <option value="feier">Feier</option>
-    </select>
-  </div>
-
-  <div class="file-preview" id="filePreview">
-    <div class="file-preview-grid" id="previewGrid"></div>
-  </div>
-
-  <button class="upload-btn" id="uploadBtn" disabled>Hochladen</button>
 
   <div class="progress-wrap" id="progressWrap">
     <div class="progress-bar-bg">
@@ -655,8 +612,6 @@ footer .heart{
 
 <script>
 (function(){
-  const dropZone=document.getElementById('dropZone');
-  const fileInput=document.getElementById('fileInput');
   const uploadBtn=document.getElementById('uploadBtn');
   const progressWrap=document.getElementById('progressWrap');
   const progressBar=document.getElementById('progressBar');
@@ -666,55 +621,81 @@ footer .heart{
   const errorMsg=document.getElementById('errorMsg');
   const filePreview=document.getElementById('filePreview');
   const previewGrid=document.getElementById('previewGrid');
-  const uploaderName=document.getElementById('uploaderName');
-  const categorySelect=document.getElementById('categorySelect');
+  const uploadPreviewArea=document.getElementById('uploadPreviewArea');
+  const previewLabel=document.getElementById('previewLabel');
   const galleryLoading=document.getElementById('galleryLoading');
   const lightbox=document.getElementById('lightbox');
   const lightboxImg=document.getElementById('lightboxImg');
   const lightboxClose=document.getElementById('lightboxClose');
 
-  const CATEGORIES=['standesamt','kirche','feier'];
+  const CATEGORY_LABELS={
+    standesamt:'Standesamtliche Trauung',
+    kirche:'Kirchliche Trauung',
+    feier:'Feier'
+  };
 
+  const categoryBtns=document.querySelectorAll('.category-btn');
   let selectedFiles=[];
+  let activeCategory='';
 
-  function checkUploadReady(){
-    uploadBtn.disabled=selectedFiles.length===0||!categorySelect.value;
+  categoryBtns.forEach(function(btn){
+    var fileInput=btn.querySelector('input[type="file"]');
+    var cat=btn.getAttribute('data-category');
+
+    btn.addEventListener('click',function(e){
+      if(e.target.tagName==='INPUT')return;
+      fileInput.click();
+    });
+
+    btn.addEventListener('dragover',function(e){
+      e.preventDefault();
+      btn.classList.add('active');
+    });
+
+    btn.addEventListener('dragleave',function(){
+      if(activeCategory!==cat)btn.classList.remove('active');
+    });
+
+    btn.addEventListener('drop',function(e){
+      e.preventDefault();
+      btn.classList.remove('active');
+      setActiveCategory(cat);
+      handleFiles(e.dataTransfer.files);
+    });
+
+    fileInput.addEventListener('change',function(){
+      if(fileInput.files.length>0){
+        setActiveCategory(cat);
+        handleFiles(fileInput.files);
+      }
+      fileInput.value='';
+    });
+  });
+
+  function setActiveCategory(cat){
+    activeCategory=cat;
+    categoryBtns.forEach(function(b){
+      if(b.getAttribute('data-category')===cat){
+        b.classList.add('active');
+      }else{
+        b.classList.remove('active');
+      }
+    });
+    previewLabel.textContent='Fotos f\u00fcr: '+CATEGORY_LABELS[cat];
+    uploadPreviewArea.style.display='block';
+    uploadBtn.textContent='Hochladen \u2192 '+CATEGORY_LABELS[cat];
   }
 
-  categorySelect.addEventListener('change',checkUploadReady);
-
-  dropZone.addEventListener('click',()=>fileInput.click());
-
-  dropZone.addEventListener('dragover',e=>{
-    e.preventDefault();
-    dropZone.classList.add('dragover');
-  });
-
-  dropZone.addEventListener('dragleave',()=>{
-    dropZone.classList.remove('dragover');
-  });
-
-  dropZone.addEventListener('drop',e=>{
-    e.preventDefault();
-    dropZone.classList.remove('dragover');
-    handleFiles(e.dataTransfer.files);
-  });
-
-  fileInput.addEventListener('change',()=>{
-    handleFiles(fileInput.files);
-    fileInput.value='';
-  });
-
   function handleFiles(files){
-    const allowed=['image/jpeg','image/jpg','image/png','image/heic','image/webp'];
-    const allowedExt=['.jpg','.jpeg','.png','.heic','.webp'];
-    const maxSize=20*1024*1024;
+    var allowed=['image/jpeg','image/jpg','image/png','image/heic','image/webp'];
+    var allowedExt=['.jpg','.jpeg','.png','.heic','.webp'];
+    var maxSize=20*1024*1024;
 
-    for(let i=0;i<files.length;i++){
-      const f=files[i];
-      const ext='.'+f.name.split('.').pop().toLowerCase();
+    for(var i=0;i<files.length;i++){
+      var f=files[i];
+      var ext='.'+f.name.split('.').pop().toLowerCase();
       if(!allowed.includes(f.type)&&!allowedExt.includes(ext)){
-        showError('"'+f.name+'" ist kein unterstuetztes Format. Erlaubt: JPG, PNG, HEIC, WebP');
+        showError('"'+f.name+'" ist kein unterst\u00fctztes Format. Erlaubt: JPG, PNG, HEIC, WebP');
         continue;
       }
       if(f.size>maxSize){
@@ -728,29 +709,29 @@ footer .heart{
       selectedFiles.push(f);
     }
     updatePreview();
-    checkUploadReady();
+    uploadBtn.disabled=selectedFiles.length===0;
   }
 
   function updatePreview(){
     previewGrid.innerHTML='';
     if(selectedFiles.length===0){
       filePreview.classList.remove('active');
+      uploadBtn.disabled=true;
       return;
     }
     filePreview.classList.add('active');
-    selectedFiles.forEach((f,i)=>{
-      const div=document.createElement('div');
+    selectedFiles.forEach(function(f,i){
+      var div=document.createElement('div');
       div.className='file-preview-item';
-      const img=document.createElement('img');
+      var img=document.createElement('img');
       img.src=URL.createObjectURL(f);
-      const btn=document.createElement('button');
+      var btn=document.createElement('button');
       btn.className='remove-btn';
       btn.textContent='\u00d7';
-      btn.addEventListener('click',e=>{
+      btn.addEventListener('click',function(e){
         e.stopPropagation();
         selectedFiles.splice(i,1);
         updatePreview();
-        checkUploadReady();
       });
       div.appendChild(img);
       div.appendChild(btn);
@@ -761,45 +742,40 @@ footer .heart{
   uploadBtn.addEventListener('click',uploadFiles);
 
   function uploadFiles(){
-    if(selectedFiles.length===0)return;
-    if(!categorySelect.value){
-      showError('Bitte eine Veranstaltung auswaehlen.');
-      return;
-    }
+    if(selectedFiles.length===0||!activeCategory)return;
     uploadBtn.disabled=true;
     errorMsg.classList.remove('active');
     successMsg.classList.remove('active');
     progressWrap.classList.add('active');
 
-    const formData=new FormData();
-    formData.append('category',categorySelect.value);
-    formData.append('uploaderName',uploaderName.value.trim());
-    selectedFiles.forEach(f=>formData.append('files[]',f));
+    var formData=new FormData();
+    formData.append('category',activeCategory);
+    selectedFiles.forEach(function(f){formData.append('files[]',f)});
 
-    const xhr=new XMLHttpRequest();
+    var xhr=new XMLHttpRequest();
     xhr.open('POST','/api/upload');
 
-    xhr.upload.addEventListener('progress',e=>{
+    xhr.upload.addEventListener('progress',function(e){
       if(e.lengthComputable){
-        const pct=Math.round((e.loaded/e.total)*100);
+        var pct=Math.round((e.loaded/e.total)*100);
         progressBar.style.width=pct+'%';
         progressText.textContent=pct+'%';
       }
     });
 
-    xhr.addEventListener('load',()=>{
+    xhr.addEventListener('load',function(){
       progressWrap.classList.remove('active');
       progressBar.style.width='0%';
       try{
-        const res=JSON.parse(xhr.responseText);
+        var res=JSON.parse(xhr.responseText);
         if(xhr.status===200&&res.success){
-          const catLabel=res.category||categorySelect.options[categorySelect.selectedIndex].text;
-          successText.textContent='Vielen Dank'+(uploaderName.value.trim()?', '+uploaderName.value.trim():'')+'! '+res.count+' Foto'+(res.count>1?'s':'')+' wurde'+(res.count>1?'n':'')+' erfolgreich hochgeladen f\u00fcr: '+catLabel;
+          successText.textContent='Vielen Dank! '+res.count+' Foto'+(res.count>1?'s':'')+' wurde'+(res.count>1?'n':'')+' hochgeladen f\u00fcr: '+(res.category||CATEGORY_LABELS[activeCategory]);
           successMsg.classList.add('active');
           selectedFiles=[];
           updatePreview();
-          uploaderName.value='';
-          categorySelect.value='';
+          activeCategory='';
+          categoryBtns.forEach(function(b){b.classList.remove('active')});
+          uploadPreviewArea.style.display='none';
           loadGallery();
         }else{
           showError(res.error||'Upload fehlgeschlagen.');
@@ -807,13 +783,13 @@ footer .heart{
       }catch(e){
         showError('Unerwartete Serverantwort.');
       }
-      checkUploadReady();
+      uploadBtn.disabled=true;
     });
 
-    xhr.addEventListener('error',()=>{
+    xhr.addEventListener('error',function(){
       progressWrap.classList.remove('active');
       showError('Verbindung zum Server fehlgeschlagen.');
-      checkUploadReady();
+      uploadBtn.disabled=false;
     });
 
     xhr.send(formData);
@@ -822,12 +798,12 @@ footer .heart{
   function showError(msg){
     errorMsg.textContent=msg;
     errorMsg.classList.add('active');
-    setTimeout(()=>errorMsg.classList.remove('active'),5000);
+    setTimeout(function(){errorMsg.classList.remove('active')},5000);
   }
 
   function renderCategoryGallery(cat,photos){
-    const grid=document.getElementById('galleryGrid-'+cat);
-    const empty=document.getElementById('galleryEmpty-'+cat);
+    var grid=document.getElementById('galleryGrid-'+cat);
+    var empty=document.getElementById('galleryEmpty-'+cat);
     if(!grid||!empty)return;
     grid.innerHTML='';
     if(!photos||photos.length===0){
@@ -835,15 +811,15 @@ footer .heart{
       return;
     }
     empty.style.display='none';
-    photos.forEach(p=>{
-      const div=document.createElement('div');
+    photos.forEach(function(p){
+      var div=document.createElement('div');
       div.className='gallery-item';
-      const img=document.createElement('img');
+      var img=document.createElement('img');
       img.src=p.url;
       img.loading='lazy';
       img.alt='Hochzeitsfoto';
       div.appendChild(img);
-      div.addEventListener('click',()=>{
+      div.addEventListener('click',function(){
         lightboxImg.src=p.url;
         lightbox.classList.add('active');
       });
@@ -853,15 +829,16 @@ footer .heart{
 
   async function loadGallery(){
     galleryLoading.classList.remove('hidden');
-    CATEGORIES.forEach(cat=>{
-      const empty=document.getElementById('galleryEmpty-'+cat);
+    var cats=['standesamt','kirche','feier'];
+    cats.forEach(function(cat){
+      var empty=document.getElementById('galleryEmpty-'+cat);
       if(empty)empty.style.display='none';
     });
     try{
-      const res=await fetch('/api/photos');
-      const data=await res.json();
+      var res=await fetch('/api/photos');
+      var data=await res.json();
       galleryLoading.classList.add('hidden');
-      CATEGORIES.forEach(cat=>{
+      cats.forEach(function(cat){
         renderCategoryGallery(cat,data[cat]||[]);
       });
     }catch(e){
@@ -869,13 +846,13 @@ footer .heart{
     }
   }
 
-  lightbox.addEventListener('click',e=>{
+  lightbox.addEventListener('click',function(e){
     if(e.target===lightbox||e.target===lightboxClose){
       lightbox.classList.remove('active');
     }
   });
 
-  document.addEventListener('keydown',e=>{
+  document.addEventListener('keydown',function(e){
     if(e.key==='Escape')lightbox.classList.remove('active');
   });
 
