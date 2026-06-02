@@ -151,6 +151,15 @@ body{
   font-style:italic;
 }
 
+.section-subtitle{
+  text-align:center;
+  color:var(--text-light);
+  font-size:clamp(14px,2vw,18px);
+  font-style:italic;
+  margin-bottom:40px;
+  font-weight:300;
+}
+
 .category-buttons{
   display:flex;
   justify-content:center;
@@ -189,14 +198,9 @@ body{
   box-shadow:0 0 20px rgba(201,184,150,0.2);
 }
 
-.category-btn .cat-icon{
-  font-size:32px;
-  margin-bottom:10px;
-}
-
 .category-btn .cat-label{
   font-family:'Cormorant Garamond',serif;
-  font-size:16px;
+  font-size:17px;
   font-weight:500;
   color:var(--text);
 }
@@ -429,8 +433,7 @@ body{
   .hero{padding:16px 10px}
   .hero-date{margin-bottom:20px;font-size:12px;letter-spacing:3px}
   .category-btn{min-width:100%;padding:18px 16px}
-  .category-btn .cat-icon{font-size:26px}
-  .category-btn .cat-label{font-size:14px}
+  .category-btn .cat-label{font-size:15px}
   .gallery{grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:6px}
 }
 
@@ -534,17 +537,14 @@ footer .heart{
 
   <div class="category-buttons">
     <button class="category-btn" data-category="standesamt">
-      <span class="cat-icon">&#9878;</span>
       <span class="cat-label">Standesamtliche Trauung</span>
       <input type="file" multiple accept=".jpg,.jpeg,.png,.heic,.webp">
     </button>
     <button class="category-btn" data-category="kirche">
-      <span class="cat-icon">&#9961;</span>
       <span class="cat-label">Kirchliche Trauung</span>
       <input type="file" multiple accept=".jpg,.jpeg,.png,.heic,.webp">
     </button>
     <button class="category-btn" data-category="feier">
-      <span class="cat-icon">&#127881;</span>
       <span class="cat-label">Feier</span>
       <input type="file" multiple accept=".jpg,.jpeg,.png,.heic,.webp">
     </button>
