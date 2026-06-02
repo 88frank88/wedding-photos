@@ -200,13 +200,36 @@ body{
 
 .category-btn .cat-label{
   font-family:'Cormorant Garamond',serif;
-  font-size:17px;
-  font-weight:500;
+  font-size:19px;
+  font-weight:300;
+  font-style:italic;
   color:var(--text);
 }
 
 .category-btn.active .cat-label{
   color:#ffffff;
+}
+
+.category-btn .cat-badge{
+  display:none;
+  position:absolute;
+  top:-8px;
+  right:-8px;
+  min-width:24px;
+  height:24px;
+  background:var(--btn);
+  color:#fff;
+  border-radius:12px;
+  font-family:-apple-system,sans-serif;
+  font-size:13px;
+  font-weight:700;
+  line-height:24px;
+  text-align:center;
+  padding:0 6px;
+}
+
+.category-btn .cat-badge.visible{
+  display:block;
 }
 
 .category-btn input[type="file"]{
@@ -537,14 +560,17 @@ footer .heart{
 
   <div class="category-buttons">
     <button class="category-btn" data-category="standesamt">
+      <span class="cat-badge" id="badge-standesamt">0</span>
       <span class="cat-label">Standesamtliche Trauung</span>
       <input type="file" multiple accept=".jpg,.jpeg,.png,.heic,.webp">
     </button>
     <button class="category-btn" data-category="kirche">
+      <span class="cat-badge" id="badge-kirche">0</span>
       <span class="cat-label">Kirchliche Trauung</span>
       <input type="file" multiple accept=".jpg,.jpeg,.png,.heic,.webp">
     </button>
     <button class="category-btn" data-category="feier">
+      <span class="cat-badge" id="badge-feier">0</span>
       <span class="cat-label">Feier</span>
       <input type="file" multiple accept=".jpg,.jpeg,.png,.heic,.webp">
     </button>
@@ -612,31 +638,31 @@ footer .heart{
 
 <script>
 (function(){
-  const uploadBtn=document.getElementById('uploadBtn');
-  const progressWrap=document.getElementById('progressWrap');
-  const progressBar=document.getElementById('progressBar');
-  const progressText=document.getElementById('progressText');
-  const successMsg=document.getElementById('successMsg');
-  const successText=document.getElementById('successText');
-  const errorMsg=document.getElementById('errorMsg');
-  const filePreview=document.getElementById('filePreview');
-  const previewGrid=document.getElementById('previewGrid');
-  const uploadPreviewArea=document.getElementById('uploadPreviewArea');
-  const previewLabel=document.getElementById('previewLabel');
-  const galleryLoading=document.getElementById('galleryLoading');
-  const lightbox=document.getElementById('lightbox');
-  const lightboxImg=document.getElementById('lightboxImg');
-  const lightboxClose=document.getElementById('lightboxClose');
+  var uploadBtn=document.getElementById('uploadBtn');
+  var progressWrap=document.getElementById('progressWrap');
+  var progressBar=document.getElementById('progressBar');
+  var progressText=document.getElementById('progressText');
+  var successMsg=document.getElementById('successMsg');
+  var successText=document.getElementById('successText');
+  var errorMsg=document.getElementById('errorMsg');
+  var previewGrid=document.getElementById('previewGrid');
+  var uploadPreviewArea=document.getElementById('uploadPreviewArea');
+  var galleryLoading=document.getElementById('galleryLoading');
+  var lightbox=document.getElementById('lightbox');
+  var lightboxImg=document.getElementById('lightboxImg');
+  var lightboxClose=document.getElementById('lightboxClose');
 
-  const CATEGORY_LABELS={
+  var CATEGORY_LABELS={
     standesamt:'Standesamtliche Trauung',
     kirche:'Kirchliche Trauung',
     feier:'Feier'
   };
+  var CATS=['standesamt','kirche','feier'];
 
-  const categoryBtns=document.querySelectorAll('.category-btn');
-  let selectedFiles=[];
-  let activeCategory='';
+  var filesByCategory={standesamt:[],kirche:[],feier:[]};
+  var activeCategory='';
+
+  var categoryBtns=document.querySelectorAll('.category-btn');
 
   categoryBtns.forEach(function(btn){
     var fileInput=btn.querySelector('input[type="file"]');
@@ -644,6 +670,8 @@ footer .heart{
 
     btn.addEventListener('click',function(e){
       if(e.target.tagName==='INPUT')return;
+      activeCategory=cat;
+      highlightActive();
       fileInput.click();
     });
 
@@ -659,34 +687,32 @@ footer .heart{
     btn.addEventListener('drop',function(e){
       e.preventDefault();
       btn.classList.remove('active');
-      setActiveCategory(cat);
-      handleFiles(e.dataTransfer.files);
+      activeCategory=cat;
+      highlightActive();
+      handleFiles(cat,e.dataTransfer.files);
     });
 
     fileInput.addEventListener('change',function(){
       if(fileInput.files.length>0){
-        setActiveCategory(cat);
-        handleFiles(fileInput.files);
+        activeCategory=cat;
+        highlightActive();
+        handleFiles(cat,fileInput.files);
       }
       fileInput.value='';
     });
   });
 
-  function setActiveCategory(cat){
-    activeCategory=cat;
+  function highlightActive(){
     categoryBtns.forEach(function(b){
-      if(b.getAttribute('data-category')===cat){
+      if(b.getAttribute('data-category')===activeCategory){
         b.classList.add('active');
       }else{
         b.classList.remove('active');
       }
     });
-    previewLabel.textContent='Fotos f\u00fcr: '+CATEGORY_LABELS[cat];
-    uploadPreviewArea.style.display='block';
-    uploadBtn.textContent='Hochladen \u2192 '+CATEGORY_LABELS[cat];
   }
 
-  function handleFiles(files){
+  function handleFiles(cat,files){
     var allowed=['image/jpeg','image/jpg','image/png','image/heic','image/webp'];
     var allowedExt=['.jpg','.jpeg','.png','.heic','.webp'];
     var maxSize=20*1024*1024;
@@ -695,104 +721,166 @@ footer .heart{
       var f=files[i];
       var ext='.'+f.name.split('.').pop().toLowerCase();
       if(!allowed.includes(f.type)&&!allowedExt.includes(ext)){
-        showError('"'+f.name+'" ist kein unterst\u00fctztes Format. Erlaubt: JPG, PNG, HEIC, WebP');
+        showError('"'+f.name+'" ist kein unterstuetztes Format.');
         continue;
       }
       if(f.size>maxSize){
-        showError('"'+f.name+'" ist zu gross. Max. 20 MB pro Foto.');
+        showError('"'+f.name+'" ist zu gross. Max. 20 MB.');
         continue;
       }
-      if(selectedFiles.length>=20){
-        showError('Maximal 20 Fotos pro Upload.');
+      if(filesByCategory[cat].length>=20){
+        showError('Maximal 20 Fotos pro Kategorie.');
         break;
       }
-      selectedFiles.push(f);
+      filesByCategory[cat].push(f);
     }
+    updateBadges();
     updatePreview();
-    uploadBtn.disabled=selectedFiles.length===0;
+    uploadPreviewArea.style.display='block';
+  }
+
+  function updateBadges(){
+    CATS.forEach(function(cat){
+      var badge=document.getElementById('badge-'+cat);
+      var count=filesByCategory[cat].length;
+      if(badge){
+        badge.textContent=count;
+        if(count>0){
+          badge.classList.add('visible');
+        }else{
+          badge.classList.remove('visible');
+        }
+      }
+    });
   }
 
   function updatePreview(){
     previewGrid.innerHTML='';
-    if(selectedFiles.length===0){
-      filePreview.classList.remove('active');
-      uploadBtn.disabled=true;
-      return;
-    }
-    filePreview.classList.add('active');
-    selectedFiles.forEach(function(f,i){
-      var div=document.createElement('div');
-      div.className='file-preview-item';
-      var img=document.createElement('img');
-      img.src=URL.createObjectURL(f);
-      var btn=document.createElement('button');
-      btn.className='remove-btn';
-      btn.textContent='\u00d7';
-      btn.addEventListener('click',function(e){
-        e.stopPropagation();
-        selectedFiles.splice(i,1);
-        updatePreview();
+    var hasFiles=false;
+
+    CATS.forEach(function(cat){
+      var files=filesByCategory[cat];
+      if(files.length===0)return;
+      hasFiles=true;
+
+      var label=document.createElement('p');
+      label.style.cssText='color:var(--btn);font-size:15px;font-style:italic;margin:16px 0 8px;width:100%;text-align:center';
+      label.textContent=CATEGORY_LABELS[cat]+' ('+files.length+')';
+      previewGrid.appendChild(label);
+
+      var row=document.createElement('div');
+      row.style.cssText='display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:10px;width:100%';
+
+      files.forEach(function(f,i){
+        var div=document.createElement('div');
+        div.className='file-preview-item';
+        var img=document.createElement('img');
+        img.src=URL.createObjectURL(f);
+        var btn=document.createElement('button');
+        btn.className='remove-btn';
+        btn.textContent='\u00d7';
+        btn.addEventListener('click',function(e){
+          e.stopPropagation();
+          filesByCategory[cat].splice(i,1);
+          updateBadges();
+          updatePreview();
+        });
+        div.appendChild(img);
+        div.appendChild(btn);
+        row.appendChild(div);
       });
-      div.appendChild(img);
-      div.appendChild(btn);
-      previewGrid.appendChild(div);
+      previewGrid.appendChild(row);
     });
+
+    uploadBtn.disabled=!hasFiles;
+    if(hasFiles){
+      var total=0;
+      CATS.forEach(function(c){total+=filesByCategory[c].length});
+      uploadBtn.textContent='Hochladen ('+total+' Fotos)';
+    }
   }
 
-  uploadBtn.addEventListener('click',uploadFiles);
+  uploadBtn.addEventListener('click',uploadAll);
 
-  function uploadFiles(){
-    if(selectedFiles.length===0||!activeCategory)return;
+  function uploadAll(){
+    var batches=[];
+    CATS.forEach(function(cat){
+      if(filesByCategory[cat].length>0){
+        batches.push({category:cat,files:filesByCategory[cat].slice()});
+      }
+    });
+    if(batches.length===0)return;
+
     uploadBtn.disabled=true;
     errorMsg.classList.remove('active');
     successMsg.classList.remove('active');
     progressWrap.classList.add('active');
 
-    var formData=new FormData();
-    formData.append('category',activeCategory);
-    selectedFiles.forEach(function(f){formData.append('files[]',f)});
+    var totalFiles=0;
+    batches.forEach(function(b){totalFiles+=b.files.length});
+    var uploadedCount=0;
 
-    var xhr=new XMLHttpRequest();
-    xhr.open('POST','/api/upload');
-
-    xhr.upload.addEventListener('progress',function(e){
-      if(e.lengthComputable){
-        var pct=Math.round((e.loaded/e.total)*100);
-        progressBar.style.width=pct+'%';
-        progressText.textContent=pct+'%';
+    function nextBatch(idx){
+      if(idx>=batches.length){
+        progressWrap.classList.remove('active');
+        progressBar.style.width='0%';
+        successText.textContent='Vielen Dank! '+uploadedCount+' Foto'+(uploadedCount>1?'s':'')+' erfolgreich hochgeladen.';
+        successMsg.classList.add('active');
+        filesByCategory={standesamt:[],kirche:[],feier:[]};
+        updateBadges();
+        updatePreview();
+        uploadPreviewArea.style.display='none';
+        categoryBtns.forEach(function(b){b.classList.remove('active')});
+        activeCategory='';
+        loadGallery();
+        return;
       }
-    });
 
-    xhr.addEventListener('load',function(){
-      progressWrap.classList.remove('active');
-      progressBar.style.width='0%';
-      try{
-        var res=JSON.parse(xhr.responseText);
-        if(xhr.status===200&&res.success){
-          successText.textContent='Vielen Dank! '+res.count+' Foto'+(res.count>1?'s':'')+' wurde'+(res.count>1?'n':'')+' hochgeladen f\u00fcr: '+(res.category||CATEGORY_LABELS[activeCategory]);
-          successMsg.classList.add('active');
-          selectedFiles=[];
-          updatePreview();
-          activeCategory='';
-          categoryBtns.forEach(function(b){b.classList.remove('active')});
-          uploadPreviewArea.style.display='none';
-          loadGallery();
-        }else{
-          showError(res.error||'Upload fehlgeschlagen.');
+      var batch=batches[idx];
+      var formData=new FormData();
+      formData.append('category',batch.category);
+      batch.files.forEach(function(f){formData.append('files[]',f)});
+
+      var xhr=new XMLHttpRequest();
+      xhr.open('POST','/api/upload');
+
+      xhr.upload.addEventListener('progress',function(e){
+        if(e.lengthComputable){
+          var batchProgress=(uploadedCount/batch.files.length);
+          var pct=Math.round(((uploadedCount+e.loaded/e.total*batch.files.length)/totalFiles)*100);
+          progressBar.style.width=Math.min(pct,100)+'%';
+          progressText.textContent=Math.min(pct,100)+'%';
         }
-      }catch(e){
-        showError('Unerwartete Serverantwort.');
-      }
-      uploadBtn.disabled=true;
-    });
+      });
 
-    xhr.addEventListener('error',function(){
-      progressWrap.classList.remove('active');
-      showError('Verbindung zum Server fehlgeschlagen.');
-      uploadBtn.disabled=false;
-    });
+      xhr.addEventListener('load',function(){
+        try{
+          var res=JSON.parse(xhr.responseText);
+          if(xhr.status===200&&res.success){
+            uploadedCount+=res.count;
+            nextBatch(idx+1);
+          }else{
+            progressWrap.classList.remove('active');
+            showError(res.error||'Upload fehlgeschlagen.');
+            uploadBtn.disabled=false;
+          }
+        }catch(e){
+          progressWrap.classList.remove('active');
+          showError('Unerwartete Serverantwort.');
+          uploadBtn.disabled=false;
+        }
+      });
 
-    xhr.send(formData);
+      xhr.addEventListener('error',function(){
+        progressWrap.classList.remove('active');
+        showError('Verbindung zum Server fehlgeschlagen.');
+        uploadBtn.disabled=false;
+      });
+
+      xhr.send(formData);
+    }
+
+    nextBatch(0);
   }
 
   function showError(msg){
@@ -829,8 +917,7 @@ footer .heart{
 
   async function loadGallery(){
     galleryLoading.classList.remove('hidden');
-    var cats=['standesamt','kirche','feier'];
-    cats.forEach(function(cat){
+    CATS.forEach(function(cat){
       var empty=document.getElementById('galleryEmpty-'+cat);
       if(empty)empty.style.display='none';
     });
@@ -838,7 +925,7 @@ footer .heart{
       var res=await fetch('/api/photos');
       var data=await res.json();
       galleryLoading.classList.add('hidden');
-      cats.forEach(function(cat){
+      CATS.forEach(function(cat){
         renderCategoryGallery(cat,data[cat]||[]);
       });
     }catch(e){
