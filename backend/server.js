@@ -255,7 +255,7 @@ app.get('/admin', basicAuth, (req, res) => {
       } else {
         galleryHtml += '<div class="grid">';
         photos.forEach(p => {
-          galleryHtml += `<div class="card"><img src="${p.url}" loading="lazy"><div class="card-info">${p.filename}<br>${(p.size/1024/1024).toFixed(2)} MB</div></div>`;
+          galleryHtml += `<div class="card"><button class="del-btn" onclick="deletePhoto('${cat}','${p.filename}')">&times;</button><img src="${p.url}" loading="lazy"><div class="card-info">${p.filename}<br>${(p.size/1024/1024).toFixed(2)} MB</div></div>`;
         });
         galleryHtml += '</div>';
       }
@@ -281,9 +281,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .btn-danger{background:#c0392b}
 .btn-danger:hover{background:#a93226}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin-top:10px}
-.card{background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.1)}
+.card{background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.1);position:relative}
 .card img{width:100%;height:180px;object-fit:cover}
 .card-info{padding:10px;font-size:12px;color:#666}
+.del-btn{position:absolute;top:8px;right:8px;width:28px;height:28px;background:rgba(192,57,43,0.85);color:#fff;border:none;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;z-index:2}
+.del-btn:hover{background:#c0392b}
 </style>
 </head>
 <body>
@@ -302,6 +304,15 @@ ${Object.keys(CATEGORIES).map(cat => `<div class="stat"><strong>${all[cat].lengt
 <a href="/" class="btn">Zurück zur Webseite</a>
 </div>
 ${galleryHtml}
+<script>
+function deletePhoto(cat,filename){
+  if(!confirm('Foto wirklich löschen?'))return;
+  fetch('/admin/photo/'+cat+'/'+filename,{method:'DELETE'})
+    .then(r=>r.json())
+    .then(d=>{alert(d.message||'Fehlgeschlagen');location.reload()})
+    .catch(()=>alert('Fehler beim Löschen'));
+}
+</script>
 </body>
 </html>`;
     res.send(html);
@@ -341,6 +352,28 @@ app.get('/admin/download-all', basicAuth, (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to create ZIP' });
+  }
+});
+
+app.delete('/admin/photo/:category/:filename', basicAuth, (req, res) => {
+  try {
+    const { category, filename } = req.params;
+    if (!CATEGORIES[category]) {
+      return res.status(400).json({ error: 'Invalid category' });
+    }
+    const safeName = path.basename(filename);
+    if (!ALLOWED_EXTENSIONS.includes(path.extname(safeName).toLowerCase())) {
+      return res.status(400).json({ error: 'Invalid file type' });
+    }
+    const filePath = path.join(UPLOAD_DIR, category, safeName);
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ error: 'File not found' });
+    }
+    fs.unlinkSync(filePath);
+    res.json({ success: true, message: `${safeName} gelöscht` });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to delete photo' });
   }
 });
 
