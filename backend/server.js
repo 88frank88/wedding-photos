@@ -13,7 +13,7 @@ dotenv.config({ path: path.resolve(__dirname, '..', '.env') });
 const app = express();
 const PORT = process.env.PORT || 3000;
 const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(__dirname, 'uploads');
-const MAX_FILE_SIZE_MB = parseInt(process.env.MAX_FILE_SIZE_MB) || 20;
+const MAX_FILE_SIZE_MB = parseInt(process.env.MAX_FILE_SIZE_MB) || 100;
 const MAX_FILES = parseInt(process.env.MAX_FILES_PER_UPLOAD) || 20;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'changeme';
 const COUPLE_NAME = process.env.COUPLE_NAME || 'Irina & Alexander';
@@ -65,8 +65,8 @@ function checkUploadRate(req, res, next) {
   next();
 }
 
-const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/heic', 'image/webp'];
-const ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.heic', '.webp'];
+const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/heic', 'image/webp', 'video/mp4', 'video/quicktime', 'video/webm'];
+const ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.heic', '.webp', '.mp4', '.mov', '.webm'];
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -96,7 +96,7 @@ function fileFilter(req, file, cb) {
   if (mimeOk || extOk) {
     cb(null, true);
   } else {
-    cb(new Error(`File type not allowed: ${file.originalname}. Allowed: jpg, jpeg, png, heic, webp`));
+    cb(new Error(`File type not allowed: ${file.originalname}. Allowed: jpg, jpeg, png, heic, webp, mp4, mov, webm`));
   }
 }
 
@@ -255,7 +255,11 @@ app.get('/admin', basicAuth, (req, res) => {
       } else {
         galleryHtml += '<div class="grid">';
         photos.forEach(p => {
-          galleryHtml += `<div class="card"><button class="del-btn" onclick="deletePhoto('${cat}','${p.filename}')">&times;</button><img src="${p.url}" loading="lazy"><div class="card-info">${p.filename}<br>${(p.size/1024/1024).toFixed(2)} MB</div></div>`;
+          const isVideo = /\.(mp4|mov|webm)$/i.test(p.url);
+          const mediaTag = isVideo
+            ? `<video src="${p.url}" preload="metadata" muted style="width:100%;height:180px;object-fit:cover"></video>`
+            : `<img src="${p.url}" loading="lazy">`;
+          galleryHtml += `<div class="card"><button class="del-btn" onclick="deletePhoto('${cat}','${p.filename}')">&times;</button>${mediaTag}<div class="card-info">${p.filename}<br>${(p.size/1024/1024).toFixed(2)} MB</div></div>`;
         });
         galleryHtml += '</div>';
       }
@@ -293,7 +297,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 <h1>Admin Panel - ${COUPLE_NAME}</h1>
 <p>${WEDDING_DATE}</p>
 <div class="stats">
-<div class="stat"><strong>${total}</strong>Fotos gesamt</div>
+<div class="stat"><strong>${total}</strong>Dateien gesamt</div>
 <div class="stat"><strong>${diskUsageMB} MB</strong>Speicher</div>
 ${Object.keys(CATEGORIES).map(cat => `<div class="stat"><strong>${all[cat].length}</strong>${CATEGORIES[cat]}</div>`).join('')}
 </div>

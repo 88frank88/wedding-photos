@@ -483,6 +483,41 @@ body{
   display:block;
 }
 
+.gallery-item video{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+
+.gallery-item{
+  position:relative;
+}
+
+.play-overlay{
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  width:48px;
+  height:48px;
+  background:rgba(0,0,0,0.6);
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  pointer-events:none;
+  z-index:1;
+}
+
+.play-overlay::before{
+  content:'';
+  border-style:solid;
+  border-width:10px 0 10px 16px;
+  border-color:transparent transparent transparent #fff;
+  margin-left:4px;
+}
+
 .gallery-empty{
   text-align:center;
   padding:60px 20px;
@@ -516,6 +551,12 @@ body{
   max-width:90%;
   max-height:90%;
   object-fit:contain;
+  border-radius:8px;
+}
+
+.lightbox video{
+  max-width:90vw;
+  max-height:85vh;
   border-radius:8px;
 }
 
@@ -564,17 +605,17 @@ footer .heart{
     <button class="category-btn" data-category="standesamt">
       <span class="cat-badge" id="badge-standesamt">0</span>
       <span class="cat-label">standesamtliche Trauung</span>
-      <input type="file" multiple accept=".jpg,.jpeg,.png,.heic,.webp">
+      <input type="file" multiple accept=".jpg,.jpeg,.png,.heic,.webp,.mp4,.mov,.webm,video/*">
     </button>
     <button class="category-btn" data-category="kirche">
       <span class="cat-badge" id="badge-kirche">0</span>
       <span class="cat-label">kirchliche Trauung</span>
-      <input type="file" multiple accept=".jpg,.jpeg,.png,.heic,.webp">
+      <input type="file" multiple accept=".jpg,.jpeg,.png,.heic,.webp,.mp4,.mov,.webm,video/*">
     </button>
     <button class="category-btn" data-category="feier">
       <span class="cat-badge" id="badge-feier">0</span>
       <span class="cat-label">die Feier</span>
-      <input type="file" multiple accept=".jpg,.jpeg,.png,.heic,.webp">
+      <input type="file" multiple accept=".jpg,.jpeg,.png,.heic,.webp,.mp4,.mov,.webm,video/*">
     </button>
   </div>
 
@@ -631,7 +672,7 @@ footer .heart{
 
 <div class="lightbox" id="lightbox">
   <span class="lightbox-close" id="lightboxClose">&times;</span>
-  <img id="lightboxImg" src="" alt="">
+  <div id="lightboxContent"></div>
 </div>
 
 <footer>
@@ -651,8 +692,27 @@ footer .heart{
   var uploadPreviewArea=document.getElementById('uploadPreviewArea');
   var galleryLoading=document.getElementById('galleryLoading');
   var lightbox=document.getElementById('lightbox');
-  var lightboxImg=document.getElementById('lightboxImg');
+  var lightboxContent=document.getElementById('lightboxContent');
   var lightboxClose=document.getElementById('lightboxClose');
+
+  function openLightbox(url,isVideo){
+    lightboxContent.innerHTML='';
+    if(isVideo){
+      var vid=document.createElement('video');
+      vid.src=url;
+      vid.controls=true;
+      vid.autoplay=true;
+      vid.style.maxWidth='90vw';
+      vid.style.maxHeight='85vh';
+      lightboxContent.appendChild(vid);
+    }else{
+      var img=document.createElement('img');
+      img.src=url;
+      img.alt='';
+      lightboxContent.appendChild(img);
+    }
+    lightbox.classList.add('active');
+  }
 
   var CATEGORY_LABELS={
     standesamt:'standesamtliche Trauung',
@@ -715,9 +775,9 @@ footer .heart{
   }
 
   function handleFiles(cat,files){
-    var allowed=['image/jpeg','image/jpg','image/png','image/heic','image/webp'];
-    var allowedExt=['.jpg','.jpeg','.png','.heic','.webp'];
-    var maxSize=20*1024*1024;
+    var allowed=['image/jpeg','image/jpg','image/png','image/heic','image/webp','video/mp4','video/quicktime','video/webm'];
+    var allowedExt=['.jpg','.jpeg','.png','.heic','.webp','.mp4','.mov','.webm'];
+    var maxSize=100*1024*1024;
 
     for(var i=0;i<files.length;i++){
       var f=files[i];
@@ -727,11 +787,11 @@ footer .heart{
         continue;
       }
       if(f.size>maxSize){
-        showError('"'+f.name+'" ist zu gross. Max. 20 MB.');
+        showError('"'+f.name+'" ist zu gross. Max. 100 MB.');
         continue;
       }
       if(filesByCategory[cat].length>=20){
-        showError('Maximal 20 Fotos pro Kategorie.');
+        showError('Maximal 20 Dateien pro Kategorie.');
         break;
       }
       filesByCategory[cat].push(f);
@@ -776,8 +836,16 @@ footer .heart{
       files.forEach(function(f,i){
         var div=document.createElement('div');
         div.className='file-preview-item';
-        var img=document.createElement('img');
-        img.src=URL.createObjectURL(f);
+        var isVid=f.type.startsWith('video/')||/\.(mp4|mov|webm)$/i.test(f.name);
+        var media;
+        if(isVid){
+          media=document.createElement('video');
+          media.preload='metadata';
+          media.muted=true;
+        }else{
+          media=document.createElement('img');
+        }
+        media.src=URL.createObjectURL(f);
         var btn=document.createElement('button');
         btn.className='remove-btn';
         btn.textContent='\u00d7';
@@ -787,7 +855,7 @@ footer .heart{
           updateBadges();
           updatePreview();
         });
-        div.appendChild(img);
+        div.appendChild(media);
         div.appendChild(btn);
         row.appendChild(div);
       });
@@ -798,7 +866,7 @@ footer .heart{
     if(hasFiles){
       var total=0;
       CATS.forEach(function(c){total+=filesByCategory[c].length});
-      uploadBtn.textContent='Hochladen ('+total+' Fotos)';
+      uploadBtn.textContent='Hochladen ('+total+' Dateien)';
     }
   }
 
@@ -904,15 +972,30 @@ footer .heart{
     photos.forEach(function(p){
       var div=document.createElement('div');
       div.className='gallery-item';
-      var img=document.createElement('img');
-      img.src=p.url;
-      img.loading='lazy';
-      img.alt='Hochzeitsfoto';
-      div.appendChild(img);
-      div.addEventListener('click',function(){
-        lightboxImg.src=p.url;
-        lightbox.classList.add('active');
-      });
+      var isVideo=/\.(mp4|mov|webm)$/i.test(p.url);
+      if(isVideo){
+        var vid=document.createElement('video');
+        vid.src=p.url;
+        vid.preload='metadata';
+        vid.muted=true;
+        vid.loading='lazy';
+        div.appendChild(vid);
+        var overlay=document.createElement('div');
+        overlay.className='play-overlay';
+        div.appendChild(overlay);
+        div.addEventListener('click',function(){
+          openLightbox(p.url,true);
+        });
+      }else{
+        var img=document.createElement('img');
+        img.src=p.url;
+        img.loading='lazy';
+        img.alt='Hochzeitsfoto';
+        div.appendChild(img);
+        div.addEventListener('click',function(){
+          openLightbox(p.url,false);
+        });
+      }
       grid.appendChild(div);
     });
   }
@@ -935,14 +1018,21 @@ footer .heart{
     }
   }
 
+  function closeLightbox(){
+    lightbox.classList.remove('active');
+    var v=lightboxContent.querySelector('video');
+    if(v){v.pause();v.src='';}
+    lightboxContent.innerHTML='';
+  }
+
   lightbox.addEventListener('click',function(e){
     if(e.target===lightbox||e.target===lightboxClose){
-      lightbox.classList.remove('active');
+      closeLightbox();
     }
   });
 
   document.addEventListener('keydown',function(e){
-    if(e.key==='Escape')lightbox.classList.remove('active');
+    if(e.key==='Escape')closeLightbox();
   });
 
   loadGallery();
