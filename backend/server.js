@@ -58,8 +58,8 @@ function checkUploadRate(req, res, next) {
     uploadRateLimit[ip] = [];
   }
   uploadRateLimit[ip] = uploadRateLimit[ip].filter(t => now - t < 3600000);
-  if (uploadRateLimit[ip].length >= 50) {
-    return res.status(429).json({ success: false, error: 'Rate limit exceeded. Max 50 uploads per hour.' });
+  if (uploadRateLimit[ip].length >= 200) {
+    return res.status(429).json({ success: false, error: 'Rate limit exceeded. Max 200 uploads per hour.' });
   }
   uploadRateLimit[ip].push(now);
   next();
@@ -139,6 +139,110 @@ app.post('/api/upload', checkUploadRate, upload.array('files[]', MAX_FILES), (re
     };
   });
   res.json({ success: true, count: files.length, files, category: CATEGORIES[category] });
+});
+
+const CHUNK_SIZE = 5 * 1024 * 1024;
+const CHUNK_DIR = path.join(UPLOAD_DIR, '.chunks');
+
+const chunkUpload = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => {
+      const fileId = req.body.fileId || 'unknown';
+      const chunkDir = path.join(CHUNK_DIR, fileId);
+      if (!fs.existsSync(chunkDir)) {
+        fs.mkdirSync(chunkDir, { recursive: true });
+      }
+      cb(null, chunkDir);
+    },
+    filename: (req, file, cb) => {
+      const chunkIndex = req.body.chunkIndex || '0';
+      cb(null, String(chunkIndex));
+    }
+  }),
+  limits: { fileSize: CHUNK_SIZE + 1024 }
+});
+
+app.post('/api/upload-chunk', checkUploadRate, chunkUpload.single('chunk'), (req, res) => {
+  const { fileId, chunkIndex, totalChunks, filename, category } = req.body;
+  if (!fileId || chunkIndex === undefined || !totalChunks || !filename || !category) {
+    return res.status(400).json({ success: false, error: 'Missing chunk metadata' });
+  }
+  if (!CATEGORIES[category]) {
+    return res.status(400).json({ success: false, error: 'Invalid category' });
+  }
+  const metaPath = path.join(CHUNK_DIR, fileId, 'meta.json');
+  if (!fs.existsSync(metaPath)) {
+    fs.writeFileSync(metaPath, JSON.stringify({ filename, category, totalChunks: parseInt(totalChunks) }));
+  }
+  const chunkDir = path.join(CHUNK_DIR, fileId);
+  const received = fs.readdirSync(chunkDir).filter(f => f !== 'meta.json' && f !== '.placeholder').length;
+  res.json({ success: true, fileId, received, total: parseInt(totalChunks) });
+});
+
+app.post('/api/upload-finalize', (req, res) => {
+  const { fileId } = req.body;
+  if (!fileId) {
+    return res.status(400).json({ success: false, error: 'Missing fileId' });
+  }
+  const chunkDir = path.join(CHUNK_DIR, fileId);
+  if (!fs.existsSync(chunkDir)) {
+    return res.status(400).json({ success: false, error: 'Chunk directory not found' });
+  }
+  const metaPath = path.join(chunkDir, 'meta.json');
+  if (!fs.existsSync(metaPath)) {
+    return res.status(400).json({ success: false, error: 'Metadata not found' });
+  }
+  const meta = JSON.parse(fs.readFileSync(metaPath, 'utf8'));
+  const { filename, category, totalChunks } = meta;
+
+  const chunkFiles = [];
+  for (let i = 0; i < totalChunks; i++) {
+    const chunkPath = path.join(chunkDir, String(i));
+    if (!fs.existsSync(chunkPath)) {
+      return res.status(400).json({ success: false, error: `Missing chunk ${i}` });
+    }
+    chunkFiles.push(chunkPath);
+  }
+
+  const ext = path.extname(filename).toLowerCase();
+  if (!ALLOWED_EXTENSIONS.includes(ext)) {
+    fs.rmSync(chunkDir, { recursive: true, force: true });
+    return res.status(400).json({ success: false, error: 'File type not allowed' });
+  }
+
+  const catDir = path.join(UPLOAD_DIR, category);
+  if (!fs.existsSync(catDir)) {
+    fs.mkdirSync(catDir, { recursive: true });
+  }
+  const finalId = uuidv4();
+  const finalPath = path.join(catDir, `${finalId}-${Date.now()}${ext}`);
+
+  const writeStream = fs.createWriteStream(finalPath);
+  chunkFiles.forEach(cf => {
+    const data = fs.readFileSync(cf);
+    writeStream.write(data);
+  });
+  writeStream.end();
+
+  writeStream.on('finish', () => {
+    fs.rmSync(chunkDir, { recursive: true, force: true });
+    const stat = fs.statSync(finalPath);
+    res.json({
+      success: true,
+      file: {
+        filename: path.basename(finalPath),
+        originalName: filename,
+        size: stat.size,
+        url: `/uploads/${category}/${path.basename(finalPath)}`,
+        category
+      }
+    });
+  });
+
+  writeStream.on('error', (err) => {
+    console.error('Finalize error:', err);
+    res.status(500).json({ success: false, error: 'Failed to assemble file' });
+  });
 });
 
 app.use((err, req, res, next) => {

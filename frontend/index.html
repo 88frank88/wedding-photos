@@ -872,6 +872,84 @@ footer .heart{
 
   uploadBtn.addEventListener('click',uploadAll);
 
+  var CHUNK_SIZE=5*1024*1024;
+
+  function isVideoFile(f){
+    return f.type.startsWith('video/')||/\.(mp4|mov|webm)$/i.test(f.name);
+  }
+
+  function uploadChunkedVideo(file,category,progressCb){
+    return new Promise(function(resolve,reject){
+      var fileId=(crypto.randomUUID&&crypto.randomUUID())||Date.now().toString(36)+Math.random().toString(36).substr(2);
+      var totalChunks=Math.ceil(file.size/CHUNK_SIZE);
+      var uploadedBytes=0;
+
+      function uploadChunk(idx){
+        if(idx>=totalChunks){
+          fetch('/api/upload-finalize',{
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({fileId:fileId})
+          })
+          .then(function(r){return r.json()})
+          .then(function(res){
+            if(res.success)resolve(res);
+            else reject(new Error(res.error||'Finalize failed'));
+          })
+          .catch(function(e){reject(e)});
+          return;
+        }
+
+        var start=idx*CHUNK_SIZE;
+        var end=Math.min(start+CHUNK_SIZE,file.size);
+        var chunk=file.slice(start,end);
+        var formData=new FormData();
+        formData.append('fileId',fileId);
+        formData.append('chunkIndex',String(idx));
+        formData.append('totalChunks',String(totalChunks));
+        formData.append('filename',file.name);
+        formData.append('category',category);
+        formData.append('chunk',chunk,file.name);
+
+        var xhr=new XMLHttpRequest();
+        xhr.open('POST','/api/upload-chunk');
+
+        xhr.upload.addEventListener('progress',function(e){
+          if(e.lengthComputable){
+            var chunkProgress=(idx*CHUNK_SIZE+e.loaded)/file.size;
+            progressCb(Math.min(chunkProgress,1));
+          }
+        });
+
+        xhr.addEventListener('load',function(){
+          try{
+            var res=JSON.parse(xhr.responseText);
+            if(xhr.status===200&&res.success){
+              progressCb((idx+1)/totalChunks);
+              uploadChunk(idx+1);
+            }else{
+              reject(new Error(res.error||'Chunk upload failed'));
+            }
+          }catch(e){
+            reject(e);
+          }
+        });
+
+        xhr.addEventListener('error',function(){
+          if(idx<3){
+            setTimeout(function(){uploadChunk(idx)},1000);
+          }else{
+            reject(new Error('Chunk '+idx+' failed after retries'));
+          }
+        });
+
+        xhr.send(formData);
+      }
+
+      uploadChunk(0);
+    });
+  }
+
   function uploadAll(){
     var batches=[];
     CATS.forEach(function(cat){
@@ -888,13 +966,80 @@ footer .heart{
 
     var totalFiles=0;
     batches.forEach(function(b){totalFiles+=b.files.length});
-    var uploadedCount=0;
+    var completedFiles=0;
 
-    function nextBatch(idx){
-      if(idx>=batches.length){
+    function updateOverallProgress(){
+      var pct=Math.round((completedFiles/totalFiles)*100);
+      progressBar.style.width=Math.min(pct,100)+'%';
+      progressText.textContent=Math.min(pct,100)+'%';
+    }
+
+    function uploadBatch(batch){
+      var videos=batch.files.filter(isVideoFile);
+      var photos=batch.files.filter(function(f){return !isVideoFile(f)});
+
+      var tasks=[];
+
+      if(photos.length>0){
+        tasks.push(new Promise(function(resolve,reject){
+          var formData=new FormData();
+          formData.append('category',batch.category);
+          photos.forEach(function(f){formData.append('files[]',f)});
+
+          var xhr=new XMLHttpRequest();
+          xhr.open('POST','/api/upload');
+
+          xhr.upload.addEventListener('progress',function(e){
+            if(e.lengthComputable){
+              var pct=Math.round(((completedFiles+(e.loaded/e.total)*photos.length)/totalFiles)*100);
+              progressBar.style.width=Math.min(pct,100)+'%';
+              progressText.textContent=Math.min(pct,100)+'%';
+            }
+          });
+
+          xhr.addEventListener('load',function(){
+            try{
+              var res=JSON.parse(xhr.responseText);
+              if(xhr.status===200&&res.success){
+                completedFiles+=photos.length;
+                resolve(res);
+              }else{
+                reject(new Error(res.error||'Upload fehlgeschlagen'));
+              }
+            }catch(e){
+              reject(e);
+            }
+          });
+
+          xhr.addEventListener('error',function(){reject(new Error('Verbindung fehlgeschlagen'))});
+          xhr.send(formData);
+        }));
+      }
+
+      videos.forEach(function(vf){
+        tasks.push(new Promise(function(resolve,reject){
+          uploadChunkedVideo(vf,batch.category,function(progress){
+            var pct=Math.round(((completedFiles+progress)/totalFiles)*100);
+            progressBar.style.width=Math.min(pct,100)+'%';
+            progressText.textContent=Math.min(pct,100)+'%';
+          }).then(function(res){
+            completedFiles+=1;
+            updateOverallProgress();
+            resolve(res);
+          }).catch(function(e){
+            reject(e);
+          });
+        }));
+      });
+
+      return Promise.all(tasks);
+    }
+
+    Promise.all(batches.map(uploadBatch))
+      .then(function(){
         progressWrap.classList.remove('active');
         progressBar.style.width='0%';
-        successText.textContent='Vielen Dank! '+uploadedCount+' Foto'+(uploadedCount>1?'s':'')+' erfolgreich hochgeladen.';
+        successText.textContent='Vielen Dank! '+totalFiles+' Datei'+(totalFiles>1?'en':'')+' erfolgreich hochgeladen.';
         successMsg.classList.add('active');
         filesByCategory={standesamt:[],kirche:[],feier:[]};
         updateBadges();
@@ -903,54 +1048,12 @@ footer .heart{
         categoryBtns.forEach(function(b){b.classList.remove('active')});
         activeCategory='';
         loadGallery();
-        return;
-      }
-
-      var batch=batches[idx];
-      var formData=new FormData();
-      formData.append('category',batch.category);
-      batch.files.forEach(function(f){formData.append('files[]',f)});
-
-      var xhr=new XMLHttpRequest();
-      xhr.open('POST','/api/upload');
-
-      xhr.upload.addEventListener('progress',function(e){
-        if(e.lengthComputable){
-          var batchProgress=(uploadedCount/batch.files.length);
-          var pct=Math.round(((uploadedCount+e.loaded/e.total*batch.files.length)/totalFiles)*100);
-          progressBar.style.width=Math.min(pct,100)+'%';
-          progressText.textContent=Math.min(pct,100)+'%';
-        }
-      });
-
-      xhr.addEventListener('load',function(){
-        try{
-          var res=JSON.parse(xhr.responseText);
-          if(xhr.status===200&&res.success){
-            uploadedCount+=res.count;
-            nextBatch(idx+1);
-          }else{
-            progressWrap.classList.remove('active');
-            showError(res.error||'Upload fehlgeschlagen.');
-            uploadBtn.disabled=false;
-          }
-        }catch(e){
-          progressWrap.classList.remove('active');
-          showError('Unerwartete Serverantwort.');
-          uploadBtn.disabled=false;
-        }
-      });
-
-      xhr.addEventListener('error',function(){
+      })
+      .catch(function(err){
         progressWrap.classList.remove('active');
-        showError('Verbindung zum Server fehlgeschlagen.');
+        showError(err.message||'Upload fehlgeschlagen.');
         uploadBtn.disabled=false;
       });
-
-      xhr.send(formData);
-    }
-
-    nextBatch(0);
   }
 
   function showError(msg){
