@@ -186,9 +186,18 @@ do_update_lxc() {
   fi
 
   if [[ -f "${INSTALL_DIR}/nginx/wedding-photos.conf" ]]; then
+    if ! command -v nginx &>/dev/null; then
+      print_step "nginx wird installiert..."
+      apt-get update -qq
+      apt-get install -y nginx
+      print_ok "nginx installiert"
+    fi
+    mkdir -p /etc/nginx/sites-available /etc/nginx/sites-enabled
     cp "${INSTALL_DIR}/nginx/wedding-photos.conf" /etc/nginx/sites-available/wedding-photos
+    rm -f /etc/nginx/sites-enabled/default 2>/dev/null || true
     ln -sf /etc/nginx/sites-available/wedding-photos /etc/nginx/sites-enabled/wedding-photos
-    nginx -t 2>/dev/null && systemctl reload nginx 2>/dev/null || true
+    nginx -t 2>/dev/null && systemctl enable nginx && systemctl restart nginx
+    print_ok "nginx konfiguriert"
   fi
 
   systemctl restart wedding-photos.service
