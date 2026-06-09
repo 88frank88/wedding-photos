@@ -139,13 +139,18 @@ do_install_lxc() {
   print_ok "Service installiert und aktiviert"
 
   print_step "nginx wird konfiguriert..."
+  mkdir -p /etc/nginx/sites-available /etc/nginx/sites-enabled
   cp "${INSTALL_DIR}/nginx/wedding-photos.conf" /etc/nginx/sites-available/wedding-photos
   rm -f /etc/nginx/sites-enabled/default 2>/dev/null || true
   ln -sf /etc/nginx/sites-available/wedding-photos /etc/nginx/sites-enabled/wedding-photos
-  nginx -t 2>/dev/null
-  systemctl enable nginx
-  systemctl restart nginx
-  print_ok "nginx konfiguriert (Port 80 → Node.js:3000)"
+  if nginx -t 2>/dev/null; then
+    systemctl enable nginx 2>/dev/null || true
+    systemctl restart nginx 2>/dev/null || true
+    print_ok "nginx konfiguriert (Port 80 → Node.js:3000)"
+  else
+    print_error "nginx config test fehlgeschlagen"
+    nginx -t 2>&1 || true
+  fi
 
   print_step "Firewall wird konfiguriert..."
   if command -v ufw &>/dev/null; then
@@ -186,18 +191,23 @@ do_update_lxc() {
   fi
 
   if [[ -f "${INSTALL_DIR}/nginx/wedding-photos.conf" ]]; then
-    if ! command -v nginx &>/dev/null; then
+    if ! command -v nginx &>/dev/null || [[ ! -d /etc/nginx/sites-available ]]; then
       print_step "nginx wird installiert..."
-      apt-get update -qq
-      apt-get install -y nginx
-      print_ok "nginx installiert"
+      apt-get update -qq 2>/dev/null || apt-get update -qq
+      DEBIAN_FRONTEND=noninteractive apt-get install -y --reinstall nginx 2>/dev/null || apt-get install -y nginx
     fi
     mkdir -p /etc/nginx/sites-available /etc/nginx/sites-enabled
     cp "${INSTALL_DIR}/nginx/wedding-photos.conf" /etc/nginx/sites-available/wedding-photos
     rm -f /etc/nginx/sites-enabled/default 2>/dev/null || true
     ln -sf /etc/nginx/sites-available/wedding-photos /etc/nginx/sites-enabled/wedding-photos
-    nginx -t 2>/dev/null && systemctl enable nginx && systemctl restart nginx
-    print_ok "nginx konfiguriert"
+    if nginx -t 2>/dev/null; then
+      systemctl enable nginx 2>/dev/null || true
+      systemctl restart nginx 2>/dev/null || true
+      print_ok "nginx konfiguriert (Port 80)"
+    else
+      print_error "nginx config test fehlgeschlagen"
+      nginx -t 2>&1 || true
+    fi
   fi
 
   systemctl restart wedding-photos.service
