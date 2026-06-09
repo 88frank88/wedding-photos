@@ -22,7 +22,9 @@ const COUPLE_NAME = process.env.COUPLE_NAME || 'Irina & Alexander';
 const WEDDING_DATE = process.env.WEDDING_DATE || '26. Juni 2026';
 const ALLOWED_ORIGINS = process.env.CORS_ORIGINS || '';
 
-if (cluster.isMaster) {
+const USE_CLUSTER = os.cpus().length > 1;
+
+if (USE_CLUSTER && cluster.isMaster) {
   const numCPUs = Math.min(os.cpus().length, 4);
   console.log(`Master ${process.pid} starting ${numCPUs} workers`);
   for (let i = 0; i < numCPUs; i++) {
@@ -530,7 +532,8 @@ app.get('*', (req, res) => {
 });
 
 app.listen(PORT, HOST, () => {
-  console.log(`Worker ${process.pid} running on ${HOST}:${PORT}`);
+  const mode = USE_CLUSTER ? `Worker ${process.pid}` : 'Server';
+  console.log(`${mode} running on ${HOST}:${PORT}`);
   console.log(`Couple: ${COUPLE_NAME}`);
   console.log(`Upload directory: ${UPLOAD_DIR}`);
 });
