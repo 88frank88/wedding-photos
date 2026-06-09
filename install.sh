@@ -86,6 +86,12 @@ do_install_lxc() {
   NODE_VERSION=$(node -v 2>/dev/null || echo "n/a")
   print_ok "Node.js ${NODE_VERSION} installiert"
 
+  print_step "nginx wird installiert..."
+  if ! command -v nginx &>/dev/null; then
+    apt-get install -y nginx
+  fi
+  print_ok "nginx installiert"
+
   print_step "Git wird installiert..."
   if ! command -v git &>/dev/null; then
     apt-get install -y git
@@ -132,14 +138,25 @@ do_install_lxc() {
   systemctl restart wedding-photos.service
   print_ok "Service installiert und aktiviert"
 
+  print_step "nginx wird konfiguriert..."
+  cp "${INSTALL_DIR}/nginx/wedding-photos.conf" /etc/nginx/sites-available/wedding-photos
+  rm -f /etc/nginx/sites-enabled/default 2>/dev/null || true
+  ln -sf /etc/nginx/sites-available/wedding-photos /etc/nginx/sites-enabled/wedding-photos
+  nginx -t 2>/dev/null
+  systemctl enable nginx
+  systemctl restart nginx
+  print_ok "nginx konfiguriert (Port 80 → Node.js:3000)"
+
   print_step "Firewall wird konfiguriert..."
   if command -v ufw &>/dev/null; then
+    ufw allow 80/tcp >/dev/null 2>&1 || true
     ufw allow 3000/tcp >/dev/null 2>&1 || true
-    print_ok "UFW: Port 3000 freigegeben"
+    print_ok "UFW: Port 80 + 3000 freigegeben"
   else
     apt-get install -y ufw >/dev/null 2>&1
+    ufw allow 80/tcp >/dev/null 2>&1 || true
     ufw allow 3000/tcp >/dev/null 2>&1 || true
-    print_ok "UFW installiert, Port 3000 freigegeben"
+    print_ok "UFW installiert, Port 80 + 3000 freigegeben"
   fi
 
   sleep 2
@@ -168,6 +185,12 @@ do_update_lxc() {
     systemctl daemon-reload
   fi
 
+  if [[ -f "${INSTALL_DIR}/nginx/wedding-photos.conf" ]]; then
+    cp "${INSTALL_DIR}/nginx/wedding-photos.conf" /etc/nginx/sites-available/wedding-photos
+    ln -sf /etc/nginx/sites-available/wedding-photos /etc/nginx/sites-enabled/wedding-photos
+    nginx -t 2>/dev/null && systemctl reload nginx 2>/dev/null || true
+  fi
+
   systemctl restart wedding-photos.service
   print_ok "Service neugestartet"
 
@@ -190,8 +213,8 @@ show_install_result() {
   echo -e "${GREEN}  Installation erfolgreich! (v${current_ver})${NC}"
   echo -e "${ROSA}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
   echo ""
-  echo -e "  Webseite:       ${GREEN}http://${server_ip}:3000${NC}"
-  echo -e "  Admin-Panel:    ${GREEN}http://${server_ip}:3000/admin${NC}"
+  echo -e "  Webseite:       ${GREEN}http://${server_ip}${NC}"
+  echo -e "  Admin-Panel:    ${GREEN}http://${server_ip}/admin${NC}"
   echo -e "  Admin-Passwort: ${GOLD}${admin_pass}${NC}"
   echo -e "  Version:        ${GOLD}v${current_ver}${NC}"
   echo -e "  Fotos unter:    ${INSTALL_DIR}/backend/uploads/"
@@ -390,8 +413,8 @@ do_proxmox_install() {
   echo -e "${ROSA}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
   echo ""
   echo -e "  Container ID:   ${BOLD}${ct_id}${NC}"
-  echo -e "  Webseite:       ${GREEN}http://${ct_ip}:3000${NC}"
-  echo -e "  Admin-Panel:    ${GREEN}http://${ct_ip}:3000/admin${NC}"
+  echo -e "  Webseite:       ${GREEN}http://${ct_ip}${NC}"
+  echo -e "  Admin-Panel:    ${GREEN}http://${ct_ip}/admin${NC}"
   echo -e "  Admin-Passwort: ${GOLD}${admin_pass}${NC}"
   echo -e "  Version:        ${GOLD}v${current_ver}${NC}"
   echo ""

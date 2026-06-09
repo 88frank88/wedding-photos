@@ -1,3 +1,5 @@
+const cluster = require('cluster');
+const os = require('os');
 const express = require('express');
 const multer = require('multer');
 const path = require('path');
@@ -10,8 +12,8 @@ const archiver = require('archiver');
 
 dotenv.config({ path: path.resolve(__dirname, '..', '.env') });
 
-const app = express();
 const PORT = process.env.PORT || 3000;
+const HOST = process.env.HOST || '127.0.0.1';
 const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(__dirname, 'uploads');
 const MAX_FILE_SIZE_MB = parseInt(process.env.MAX_FILE_SIZE_MB) || 100;
 const MAX_FILES = parseInt(process.env.MAX_FILES_PER_UPLOAD) || 20;
@@ -20,11 +22,25 @@ const COUPLE_NAME = process.env.COUPLE_NAME || 'Irina & Alexander';
 const WEDDING_DATE = process.env.WEDDING_DATE || '26. Juni 2026';
 const ALLOWED_ORIGINS = process.env.CORS_ORIGINS || '';
 
+if (cluster.isMaster) {
+  const numCPUs = Math.min(os.cpus().length, 4);
+  console.log(`Master ${process.pid} starting ${numCPUs} workers`);
+  for (let i = 0; i < numCPUs; i++) {
+    cluster.fork();
+  }
+  cluster.on('exit', (worker, code, signal) => {
+    console.log(`Worker ${worker.process.pid} died, restarting`);
+    cluster.fork();
+  });
+} else {
+
 const CATEGORIES = {
   standesamt: 'Standesamtliche Trauung',
   kirche: 'Kirchliche Trauung',
   feier: 'Feier'
 };
+
+const app = express();
 
 if (!fs.existsSync(UPLOAD_DIR)) {
   fs.mkdirSync(UPLOAD_DIR, { recursive: true });
@@ -141,7 +157,7 @@ app.post('/api/upload', checkUploadRate, upload.array('files[]', MAX_FILES), (re
   res.json({ success: true, count: files.length, files, category: CATEGORIES[category] });
 });
 
-const CHUNK_SIZE = 5 * 1024 * 1024;
+const CHUNK_SIZE = 10 * 1024 * 1024;
 const CHUNK_DIR = path.join(UPLOAD_DIR, '.chunks');
 
 const chunkUpload = multer({
@@ -513,9 +529,10 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'frontend', 'index.html'));
 });
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Wedding Photos server running on port ${PORT}`);
+app.listen(PORT, HOST, () => {
+  console.log(`Worker ${process.pid} running on ${HOST}:${PORT}`);
   console.log(`Couple: ${COUPLE_NAME}`);
   console.log(`Upload directory: ${UPLOAD_DIR}`);
-  console.log(`Categories: ${Object.keys(CATEGORIES).join(', ')}`);
 });
+
+}

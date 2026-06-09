@@ -872,7 +872,8 @@ footer .heart{
 
   uploadBtn.addEventListener('click',uploadAll);
 
-  var CHUNK_SIZE=5*1024*1024;
+  var CHUNK_SIZE=10*1024*1024;
+  var MAX_CONCURRENT_CHUNKS=3;
 
   function isVideoFile(f){
     return f.type.startsWith('video/')||/\.(mp4|mov|webm)$/i.test(f.name);
@@ -882,71 +883,94 @@ footer .heart{
     return new Promise(function(resolve,reject){
       var fileId=(crypto.randomUUID&&crypto.randomUUID())||Date.now().toString(36)+Math.random().toString(36).substr(2);
       var totalChunks=Math.ceil(file.size/CHUNK_SIZE);
-      var uploadedBytes=0;
+      var completedChunks=0;
+      var failed=false;
 
-      function uploadChunk(idx){
-        if(idx>=totalChunks){
-          fetch('/api/upload-finalize',{
+      function uploadSingleChunk(idx){
+        if(failed)return Promise.reject();
+        return new Promise(function(res,rej){
+          var start=idx*CHUNK_SIZE;
+          var end=Math.min(start+CHUNK_SIZE,file.size);
+          var chunk=file.slice(start,end);
+          var formData=new FormData();
+          formData.append('fileId',fileId);
+          formData.append('chunkIndex',String(idx));
+          formData.append('totalChunks',String(totalChunks));
+          formData.append('filename',file.name);
+          formData.append('category',category);
+          formData.append('chunk',chunk,file.name);
+
+          var xhr=new XMLHttpRequest();
+          xhr.open('POST','/api/upload-chunk');
+
+          xhr.upload.addEventListener('progress',function(e){
+            if(e.lengthComputable){
+              var doneBytes=completedChunks*CHUNK_SIZE+e.loaded;
+              progressCb(Math.min(doneBytes/file.size,1));
+            }
+          });
+
+          xhr.addEventListener('load',function(){
+            try{
+              var result=JSON.parse(xhr.responseText);
+              if(xhr.status===200&&result.success){
+                completedChunks++;
+                progressCb(completedChunks/totalChunks);
+                res();
+              }else{
+                failed=true;
+                rej(new Error(result.error||'Chunk upload failed'));
+              }
+            }catch(e){
+              failed=true;
+              rej(e);
+            }
+          });
+
+          xhr.addEventListener('error',function(){
+            failed=true;
+            rej(new Error('Chunk '+idx+' failed'));
+          });
+
+          xhr.send(formData);
+        });
+      }
+
+      function runChunkPool(){
+        var nextIdx=0;
+        function next(){
+          if(failed)return Promise.reject();
+          if(nextIdx>=totalChunks)return Promise.resolve();
+          var current=nextIdx++;
+          return uploadSingleChunk(current).then(function(){
+            return next();
+          });
+        }
+        var workers=[];
+        var workerCount=Math.min(MAX_CONCURRENT_CHUNKS,totalChunks);
+        for(var i=0;i<workerCount;i++){
+          workers.push(next());
+        }
+        return Promise.all(workers);
+      }
+
+      runChunkPool()
+        .then(function(){
+          return fetch('/api/upload-finalize',{
             method:'POST',
             headers:{'Content-Type':'application/json'},
             body:JSON.stringify({fileId:fileId})
-          })
-          .then(function(r){return r.json()})
-          .then(function(res){
-            if(res.success)resolve(res);
-            else reject(new Error(res.error||'Finalize failed'));
-          })
-          .catch(function(e){reject(e)});
-          return;
-        }
-
-        var start=idx*CHUNK_SIZE;
-        var end=Math.min(start+CHUNK_SIZE,file.size);
-        var chunk=file.slice(start,end);
-        var formData=new FormData();
-        formData.append('fileId',fileId);
-        formData.append('chunkIndex',String(idx));
-        formData.append('totalChunks',String(totalChunks));
-        formData.append('filename',file.name);
-        formData.append('category',category);
-        formData.append('chunk',chunk,file.name);
-
-        var xhr=new XMLHttpRequest();
-        xhr.open('POST','/api/upload-chunk');
-
-        xhr.upload.addEventListener('progress',function(e){
-          if(e.lengthComputable){
-            var chunkProgress=(idx*CHUNK_SIZE+e.loaded)/file.size;
-            progressCb(Math.min(chunkProgress,1));
-          }
+          });
+        })
+        .then(function(r){return r.json()})
+        .then(function(res){
+          if(res.success)resolve(res);
+          else reject(new Error(res.error||'Finalize failed'));
+        })
+        .catch(function(e){
+          if(!failed)failed=true;
+          reject(e);
         });
-
-        xhr.addEventListener('load',function(){
-          try{
-            var res=JSON.parse(xhr.responseText);
-            if(xhr.status===200&&res.success){
-              progressCb((idx+1)/totalChunks);
-              uploadChunk(idx+1);
-            }else{
-              reject(new Error(res.error||'Chunk upload failed'));
-            }
-          }catch(e){
-            reject(e);
-          }
-        });
-
-        xhr.addEventListener('error',function(){
-          if(idx<3){
-            setTimeout(function(){uploadChunk(idx)},1000);
-          }else{
-            reject(new Error('Chunk '+idx+' failed after retries'));
-          }
-        });
-
-        xhr.send(formData);
-      }
-
-      uploadChunk(0);
     });
   }
 
