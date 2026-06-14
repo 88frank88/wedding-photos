@@ -3,7 +3,7 @@ set -euo pipefail
 
 INSTALL_DIR="/opt/wedding-photos"
 REPO_URL="${REPO_URL:-https://github.com/88frank88/wedding-photos.git}"
-REPO_API="https://api.github.com/repos/88frank88/wedding-photos/releases/latest"
+REPO_RAW="https://raw.githubusercontent.com/88frank88/wedding-photos/main/VERSION"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -57,7 +57,7 @@ generate_password() {
 }
 
 get_latest_version() {
-  curl -fsSL "$REPO_API" 2>/dev/null | grep '"tag_name"' | head -1 | sed -E 's/.*"v?([^"]+)".*/\1/' || echo "0.0.0"
+  curl -fsSL "$REPO_RAW" 2>/dev/null | tr -d '[:space:]' || echo "0.0.0"
 }
 
 get_current_version() {
