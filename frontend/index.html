@@ -518,6 +518,31 @@ body{
   margin-left:4px;
 }
 
+.gallery-download{
+  position:absolute;
+  bottom:6px;
+  right:6px;
+  width:32px;
+  height:32px;
+  background:rgba(139,111,176,0.85);
+  color:#fff;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:16px;
+  text-decoration:none;
+  z-index:2;
+  opacity:0.8;
+  line-height:1;
+  transition:opacity 0.2s,background 0.2s;
+}
+
+.gallery-download:hover{
+  opacity:1;
+  background:#8b6fb0;
+}
+
 .gallery-empty{
   text-align:center;
   padding:60px 20px;
@@ -569,6 +594,29 @@ body{
   z-index:1001;
   text-decoration:none;
   font-family:sans-serif;
+}
+
+.lightbox-download{
+  position:absolute;
+  bottom:24px;
+  right:30px;
+  width:48px;
+  height:48px;
+  background:rgba(139,111,176,0.9);
+  color:#fff;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:22px;
+  text-decoration:none;
+  z-index:1001;
+  cursor:pointer;
+  line-height:1;
+}
+
+.lightbox-download:hover{
+  background:#8b6fb0;
 }
 
 footer{
@@ -673,6 +721,7 @@ footer .heart{
 <div class="lightbox" id="lightbox">
   <span class="lightbox-close" id="lightboxClose">&times;</span>
   <div id="lightboxContent"></div>
+  <a href="#" id="lightboxDownload" download class="lightbox-download" title="Herunterladen">&#11015;</a>
 </div>
 
 <footer>
@@ -694,9 +743,13 @@ footer .heart{
   var lightbox=document.getElementById('lightbox');
   var lightboxContent=document.getElementById('lightboxContent');
   var lightboxClose=document.getElementById('lightboxClose');
+  var lightboxDownload=document.getElementById('lightboxDownload');
 
   function openLightbox(url,isVideo){
     lightboxContent.innerHTML='';
+    var fileName=url.split('/').pop();
+    lightboxDownload.href=url;
+    lightboxDownload.download=fileName||'download';
     if(isVideo){
       var vid=document.createElement('video');
       vid.src=url;
@@ -1123,6 +1176,16 @@ footer .heart{
           openLightbox(p.url,false);
         });
       }
+      var dl=document.createElement('a');
+      dl.href=p.url;
+      dl.download=(p.url.split('/').pop())||'download';
+      dl.className='gallery-download';
+      dl.title='Herunterladen';
+      dl.innerHTML='&#11015;';
+      dl.addEventListener('click',function(e){
+        e.stopPropagation();
+      });
+      div.appendChild(dl);
       grid.appendChild(div);
     });
   }
